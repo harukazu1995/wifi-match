@@ -330,7 +330,16 @@ class MeshService extends ChangeNotifier {
         udp.send(data, target, kDiscoveryPort);
       } catch (_) {}
     }
+    // 自動テスト用: 決まった宛先（IP → ポート）にも直接送る
+    debugTargets.forEach((host, port) {
+      try {
+        udp.send(data, InternetAddress(host), port);
+      } catch (_) {}
+    });
   }
+
+  /// 自動テスト用の追加の送り先。通常のアプリでは空のまま。
+  static final Map<String, int> debugTargets = {};
 
   Future<List<InternetAddress>> _broadcastTargets() async {
     final targets = <String>{'255.255.255.255'};
