@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'mesh.dart';
@@ -9,6 +10,9 @@ import 'mesh.dart';
 final mesh = MeshService();
 final navKey = GlobalKey<NavigatorState>();
 final messengerKey = GlobalKey<ScaffoldMessengerState>();
+
+const kPrivacyUrl = 'https://github.com/harukazu1995/wifi-match/blob/main/PRIVACY.md';
+const kContactUrl = 'https://github.com/harukazu1995/wifi-match/issues';
 
 const _coral = Color(0xFFFF4D6D);
 const _orange = Color(0xFFFF8A4C);
@@ -883,6 +887,7 @@ class PersonCard extends StatelessWidget {
                 else
                   FilledButton.icon(onPressed: _like, icon: const Icon(Icons.favorite_border, size: 18), label: const Text('いいね')),
                 const Spacer(),
+                TextButton(onPressed: () => reportUser(context, p), child: Text('通報', style: TextStyle(color: Theme.of(context).hintColor))),
                 TextButton(onPressed: () => confirmBlock(context, p), child: Text('ブロック', style: TextStyle(color: Theme.of(context).hintColor))),
               ]),
             ]),
@@ -911,6 +916,47 @@ Future<bool> confirmBlock(BuildContext context, Profile p) async {
     return true;
   }
   return false;
+}
+
+Future<bool> reportUser(BuildContext context, Profile p) async {
+  const reasons = ['不適切な内容・言葉', '嫌がらせ・しつこい迷惑行為', '18歳未満の疑い', '勧誘・宣伝・詐欺の疑い', 'その他'];
+  var reason = reasons.first;
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setLocal) => AlertDialog(
+        title: Text('${p.name} さんを通報'),
+        content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('理由を選んでください。通報すると、この人をブロックし、通報の内容がコピーされます。', style: TextStyle(fontSize: 13)),
+          const SizedBox(height: 10),
+          Wrap(spacing: 6, runSpacing: 6, children: [
+            for (final r in reasons)
+              ChoiceChip(label: Text(r), selected: reason == r, onSelected: (_) => setLocal(() => reason = r)),
+          ]),
+        ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('キャンセル')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('通報してブロック')),
+        ],
+      ),
+    ),
+  );
+  if (ok != true) return false;
+  final report = 'WiFi Match 通報\n相手: ${p.name} (${p.id})\n理由: $reason\n日時: ${DateTime.now().toIso8601String()}';
+  await Clipboard.setData(ClipboardData(text: report));
+  await mesh.block(p.id);
+  final nav = navKey.currentContext;
+  if (nav != null && nav.mounted) {
+    await showDialog<void>(
+      context: nav,
+      builder: (ctx) => AlertDialog(
+        title: const Text('通報してブロックしました'),
+        content: SelectableText('この人は表示されなくなりました。\n運営にも知らせる場合は、コピーされた通報の内容を、次のページに貼り付けてください。\n$kContactUrl'),
+        actions: [FilledButton(onPressed: () => Navigator.pop(ctx), child: const Text('閉じる'))],
+      ),
+    );
+  }
+  return true;
 }
 
 // ======================= マッチ =======================
@@ -954,6 +1000,7 @@ class Bubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final mine = m.from == mesh.me?.id;
+    final who = (!mine && showWho) ? mesh.profileOf(m.from) : null;
     final cs = Theme.of(context).colorScheme;
     final bubble = Container(
       constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.68),
@@ -986,7 +1033,7 @@ class Bubble extends StatelessWidget {
                 padding: const EdgeInsets.only(left: 4, bottom: 2),
                 child: Text(m.name, style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor)),
               ),
-            bubble,
+            who == null ? bubble : GestureDetector(onLongPress: () => reportUser(context, who), child: bubble),
           ]),
           if (!mine) ...[const SizedBox(width: 6), time],
         ],
@@ -1115,6 +1162,12 @@ class _ChatScreenState extends State<ChatScreen> {
             actions: [
               TextButton(
                 onPressed: () async {
+                  if (await reportUser(context, p) && context.mounted) Navigator.pop(context);
+                },
+                child: Text('通報', style: TextStyle(color: Theme.of(context).hintColor)),
+              ),
+              TextButton(
+                onPressed: () async {
                   if (await confirmBlock(context, p) && context.mounted) Navigator.pop(context);
                 },
                 child: Text('ブロック', style: TextStyle(color: Theme.of(context).hintColor)),
@@ -1213,6 +1266,16 @@ class MeTab extends StatelessWidget {
         'プロフィールやメッセージは、この端末の中だけに保存されます。やり取りは同じWiFi内の端末同士で直接行われ、運営のサーバーには送られません。'
         '広告の表示のため、広告サービス（Google AdMob）が端末の情報を利用することがあります。',
         style: TextStyle(fontSize: 12.5, color: Theme.of(context).hintColor),
+      ),
+      const SizedBox(height: 10),
+      Text(
+        '【ご利用ルール】18歳以上の方のみご利用いただけます。わいせつな内容、嫌がらせ、勧誘や詐欺、金銭の要求、18歳未満の方への接触は禁止です。不快な相手は「通報」「ブロック」ができます（広場では相手のメッセージを長押し）。',
+        style: TextStyle(fontSize: 12.5, color: Theme.of(context).hintColor),
+      ),
+      const SizedBox(height: 8),
+      SelectableText(
+        'プライバシーポリシー: $kPrivacyUrl\nお問い合わせ: $kContactUrl',
+        style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor),
       ),
       FutureBuilder<PrivacyOptionsRequirementStatus>(
         future: ConsentInformation.instance.getPrivacyOptionsRequirementStatus(),
