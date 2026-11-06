@@ -53,5 +53,28 @@ for density in ["mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"]:
     if src.exists() and dst.parent.is_dir():
         shutil.copy(src, dst)
 
+# 広告ライブラリが使う WorkManager が、コード圧縮（R8）で壊れて起動時に落ちるため、圧縮を無効にする
+minify_done = False
+for gradle_name in ("build.gradle.kts", "build.gradle"):
+    gradle = root / "android/app" / gradle_name
+    if not gradle.exists():
+        continue
+    text = gradle.read_text(encoding="utf-8")
+    if "isMinifyEnabled" in text or "minifyEnabled" in text:
+        minify_done = True
+        break
+    if gradle_name.endswith(".kts"):
+        extra = "isMinifyEnabled = false\n\\2isShrinkResources = false"
+    else:
+        extra = "minifyEnabled false\n\\2shrinkResources false"
+    new_text, n = re.subn(r"(\n([ \t]*)signingConfig\b[^\n]*)", r"\1\n\2" + extra, text, count=1)
+    if n:
+        gradle.write_text(new_text, encoding="utf-8")
+        minify_done = True
+        print(f"{gradle_name}: コード圧縮を無効にしました")
+        break
+if not minify_done:
+    sys.exit("android/app の build.gradle に release の設定が見つかりません（コード圧縮を無効にできませんでした）")
+
 print("Android の設定を追加しました")
 print(s)
