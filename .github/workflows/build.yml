@@ -95,3 +95,34 @@ jobs:
           files: |
             WiFiMatch.apk
             TestBuddy.exe
+
+  # 起動確認：エミュレーターでアプリを開き、落ちた場合のエラー記録を表示する（公開には影響しない）
+  smoke:
+    needs: android
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: android
+      - name: KVM を有効にする
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: エミュレーターで起動して記録を取る
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          script: |
+            adb install -r WiFiMatch.apk
+            adb logcat -c
+            adb shell monkey -p com.wifimatch.wifi_match -c android.intent.category.LAUNCHER 1
+            sleep 25
+            echo "===== PROCESS ALIVE? ====="
+            adb shell pidof com.wifimatch.wifi_match || echo "NOT RUNNING"
+            echo "===== CRASH LOG ====="
+            adb logcat -d -b crash || true
+            echo "===== FATAL / ERROR LINES ====="
+            adb logcat -d | grep -E "FATAL EXCEPTION|AndroidRuntime|Caused by|Process: com.wifimatch|IllegalState|ClassNotFound|NoClassDef|VerifyError|MobileAds|Ads" | head -n 120 || true
