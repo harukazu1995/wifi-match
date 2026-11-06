@@ -276,7 +276,7 @@ String hhmm(int ms) {
 
 /// true の間は Google が用意したテスト広告を表示する（自分で広告を押しても問題ない）。
 /// AdMob の審査が通って本番の広告に切り替えるときだけ false にする。
-const bool kUseTestAds = true;
+const bool kUseTestAds = false;
 const String _bannerUnitTest = 'ca-app-pub-3940256099942544/6300978111';
 const String _bannerUnitProd = 'ca-app-pub-6787171058926480/5616465700';
 
