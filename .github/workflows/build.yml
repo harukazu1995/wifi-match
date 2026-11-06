@@ -39,8 +39,8 @@ jobs:
       - name: テスト（テスト相手との実際の通信テストを含む）
         run: flutter test
 
-      - name: APK をビルド
-        run: flutter build apk --release
+      - name: APK をビルド（コード圧縮は広告ライブラリの部品を壊すため無効）
+        run: flutter build apk --release --no-shrink
 
       - name: ファイル名を整える
         run: cp build/app/outputs/flutter-apk/app-release.apk WiFiMatch.apk
