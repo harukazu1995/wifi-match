@@ -501,8 +501,10 @@ class MeshService extends ChangeNotifier {
   // ---------------- 送信 ----------------
   Future<Map<String, dynamic>> _post(Peer peer, String path, Map<String, dynamic> body) async {
     final req = await _client.post(peer.address.address, peer.port, path).timeout(const Duration(seconds: 5));
+    final bytes = utf8.encode(jsonEncode(body));
     req.headers.contentType = ContentType.json;
-    req.write(jsonEncode(body));
+    req.headers.contentLength = bytes.length; // 分割送信にせず、サイズを明示して送る
+    req.add(bytes);
     final resp = await req.close().timeout(const Duration(seconds: 5));
     final text = await utf8.decodeStream(resp).timeout(const Duration(seconds: 5));
     if (resp.statusCode == 409) throw MeshException('相手の端末がまだあなたを見つけていません。数秒後にもう一度試してください');
