@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'mesh.dart';
 
@@ -267,6 +268,118 @@ String hhmm(int ms) {
   return '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
 }
 
+// ======================= 広告（Google AdMob） =======================
+
+/// true の間は Google が用意したテスト広告を表示する（自分で広告を押しても問題ない）。
+/// AdMob の審査が通って本番の広告に切り替えるときだけ false にする。
+const bool kUseTestAds = true;
+const String _bannerUnitTest = 'ca-app-pub-3940256099942544/6300978111';
+const String _bannerUnitProd = 'ca-app-pub-6787171058926480/5616465700';
+
+class AdService {
+  static bool _started = false;
+
+  /// 広告を出してよい状態になったら true
+  static final ValueNotifier<bool> ready = ValueNotifier<bool>(false);
+
+  /// 利用者の同意を確認してから、広告の準備を始める。
+  static Future<void> start() async {
+    if (_started) return;
+    _started = true;
+    try {
+      final done = Completer<void>();
+      ConsentInformation.instance.requestConsentInfoUpdate(
+        ConsentRequestParameters(tagForUnderAgeOfConsent: false),
+        () {
+          ConsentForm.loadAndShowConsentFormIfRequired((FormError? error) {
+            if (!done.isCompleted) done.complete();
+          });
+        },
+        (FormError error) {
+          if (!done.isCompleted) done.complete();
+        },
+      );
+      await done.future.timeout(const Duration(seconds: 30), onTimeout: () {});
+      if (await ConsentInformation.instance.canRequestAds()) {
+        await MobileAds.instance.updateRequestConfiguration(RequestConfiguration(
+          tagForChildDirectedTreatment: TagForChildDirectedTreatment.no,
+          tagForUnderAgeOfConsent: TagForUnderAgeOfConsent.no,
+          maxAdContentRating: MaxAdContentRating.pg,
+        ));
+        await MobileAds.instance.initialize();
+        ready.value = true;
+      }
+    } catch (_) {
+      // 広告の準備に失敗しても、アプリ本体は普通に使える
+    }
+  }
+}
+
+/// 画面の下に出す小さなバナー広告。広告が読み込めるまでは何も表示しない。
+class AdBanner extends StatefulWidget {
+  const AdBanner({super.key});
+
+  @override
+  State<AdBanner> createState() => _AdBannerState();
+}
+
+class _AdBannerState extends State<AdBanner> {
+  BannerAd? _ad;
+  bool _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    AdService.ready.addListener(_maybeLoad);
+    _maybeLoad();
+  }
+
+  void _maybeLoad() {
+    if (_ad != null || !AdService.ready.value) return;
+    final ad = BannerAd(
+      adUnitId: kUseTestAds ? _bannerUnitTest : _bannerUnitProd,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (_) {
+          if (mounted) setState(() => _loaded = true);
+        },
+        onAdFailedToLoad: (failed, error) {
+          failed.dispose();
+          if (mounted) {
+            setState(() {
+              _ad = null;
+              _loaded = false;
+            });
+          }
+        },
+      ),
+    );
+    _ad = ad;
+    ad.load();
+  }
+
+  @override
+  void dispose() {
+    AdService.ready.removeListener(_maybeLoad);
+    _ad?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ad = _ad;
+    if (!_loaded || ad == null) return const SizedBox.shrink();
+    return Container(
+      color: Colors.white,
+      alignment: Alignment.center,
+      width: double.infinity,
+      height: AdSize.banner.height.toDouble(),
+      child: SizedBox(width: AdSize.banner.width.toDouble(), height: AdSize.banner.height.toDouble(), child: AdWidget(ad: ad)),
+    );
+  }
+}
+
 // ======================= 共通パーツ =======================
 
 class Avatar extends StatelessWidget {
@@ -519,6 +632,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _sub = mesh.events.listen(_onEvent);
+    unawaited(AdService.start());
   }
 
   @override
@@ -622,7 +736,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ),
           // const にしないことで、通信状態が変わるたびに各タブを描き直す
           body: IndexedStack(index: _tab, children: [PeopleTab(), MatchesTab(), PlazaTab(), MeTab()]),
-          bottomNavigationBar: NavigationBar(
+          bottomNavigationBar: Column(mainAxisSize: MainAxisSize.min, children: [
+            const AdBanner(),
+            NavigationBar(
             selectedIndex: _tab,
             onDestinationSelected: (i) {
               setState(() => _tab = i);
@@ -647,6 +763,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               const NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: '自分'),
             ],
           ),
+          ]),
         );
       },
     );
@@ -1093,8 +1210,21 @@ class MeTab extends StatelessWidget {
       ),
       const SizedBox(height: 16),
       Text(
-        'データはこの端末の中だけに保存されます。通信は同じWiFi内の端末同士で直接行われ、外部のサーバーには送られません。',
+        'プロフィールやメッセージは、この端末の中だけに保存されます。やり取りは同じWiFi内の端末同士で直接行われ、運営のサーバーには送られません。'
+        '広告の表示のため、広告サービス（Google AdMob）が端末の情報を利用することがあります。',
         style: TextStyle(fontSize: 12.5, color: Theme.of(context).hintColor),
+      ),
+      FutureBuilder<PrivacyOptionsRequirementStatus>(
+        future: ConsentInformation.instance.getPrivacyOptionsRequirementStatus(),
+        builder: (context, snap) => snap.data == PrivacyOptionsRequirementStatus.required
+            ? Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: () => ConsentForm.showPrivacyOptionsForm((FormError? error) {}),
+                  child: const Text('広告とプライバシーの設定'),
+                ),
+              )
+            : const SizedBox.shrink(),
       ),
       if (mesh.localIps.isNotEmpty)
         Padding(
