@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -8,8 +9,12 @@ final mesh = MeshService();
 final navKey = GlobalKey<NavigatorState>();
 final messengerKey = GlobalKey<ScaffoldMessengerState>();
 
-const _coral = Color(0xFFFF5A5F);
+const _coral = Color(0xFFFF4D6D);
+const _orange = Color(0xFFFF8A4C);
+const _ink = Color(0xFF2B2430);
+const _bg = Color(0xFFFFF8F3);
 const _sharedColor = Color(0xFFFFE9A8);
+const _brandGradient = LinearGradient(colors: [_coral, _orange], begin: Alignment.topLeft, end: Alignment.bottomRight);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,16 +26,69 @@ Future<void> main() async {
 class WifiMatchApp extends StatelessWidget {
   const WifiMatchApp({super.key});
 
-  ThemeData _theme(Brightness b) => ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: _coral, brightness: b, primary: _coral),
-        scaffoldBackgroundColor: b == Brightness.light ? const Color(0xFFFBF6EF) : const Color(0xFF14131B),
-        cardTheme: const CardThemeData(elevation: 0, margin: EdgeInsets.only(bottom: 12)),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+  // 明るい配色に固定（端末のダークモードに引きずられて暗くならないようにする）
+  ThemeData _theme() {
+    final scheme = ColorScheme.fromSeed(seedColor: _coral, brightness: Brightness.light, primary: _coral).copyWith(
+      surface: Colors.white,
+      onSurface: _ink,
+      primaryContainer: const Color(0xFFFFE3E8),
+      onPrimaryContainer: const Color(0xFF7A1F33),
+      surfaceContainerHighest: const Color(0xFFF6ECE6),
+    );
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: scheme,
+      scaffoldBackgroundColor: _bg,
+      cardTheme: CardThemeData(
+        color: Colors.white,
+        elevation: 3,
+        shadowColor: const Color(0x22FF4D6D),
+        surfaceTintColor: Colors.transparent,
+        margin: const EdgeInsets.only(bottom: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: _bg,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          shape: const StadiumBorder(),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         ),
-      );
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(style: OutlinedButton.styleFrom(shape: const StadiumBorder())),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 12,
+        shadowColor: const Color(0x33FF4D6D),
+        indicatorColor: const Color(0xFFFFE3E8),
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (s) => TextStyle(fontSize: 12, fontWeight: s.contains(WidgetState.selected) ? FontWeight.w800 : FontWeight.w500),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFFF0DED5))),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFFF0DED5))),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: _coral, width: 2)),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: _ink,
+        contentTextStyle: const TextStyle(color: Colors.white),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,12 +97,161 @@ class WifiMatchApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       navigatorKey: navKey,
       scaffoldMessengerKey: messengerKey,
-      theme: _theme(Brightness.light),
-      darkTheme: _theme(Brightness.dark),
-      home: ListenableBuilder(
-        listenable: mesh,
-        builder: (context, _) => mesh.me == null ? const OnboardingScreen() : const HomeScreen(),
+      theme: _theme(),
+      themeMode: ThemeMode.light,
+      home: const _AppGate(),
+    );
+  }
+}
+
+// ======================= 起動アニメーション =======================
+
+/// WiFiの電波と、ハートを組み合わせたロゴ。progress(0〜1)で描かれていく。
+class WifiLogo extends StatelessWidget {
+  const WifiLogo({super.key, this.progress = 1, this.size = 120});
+  final double progress;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final heart = Curves.elasticOut.transform((progress / 0.45).clamp(0.0, 1.0));
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(alignment: Alignment.center, children: [
+        CustomPaint(size: Size.square(size), painter: _ArcsPainter(progress)),
+        Align(
+          alignment: const Alignment(0, 0.44),
+          child: Transform.scale(
+            scale: heart,
+            child: ShaderMask(
+              shaderCallback: (r) => _brandGradient.createShader(r),
+              child: Icon(Icons.favorite, size: size * 0.3, color: Colors.white),
+            ),
+          ),
+        ),
+      ]),
+    );
+  }
+}
+
+class _ArcsPainter extends CustomPainter {
+  _ArcsPainter(this.progress);
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final center = Offset(w / 2, size.height * 0.72);
+    for (var i = 0; i < 3; i++) {
+      // 内側から順に、ふわっと現れる
+      final a = ((progress - 0.3 - i * 0.14) / 0.22).clamp(0.0, 1.0);
+      if (a <= 0) continue;
+      final r = w * (0.2 + 0.17 * i);
+      final rect = Rect.fromCircle(center: center, radius: r);
+      final paint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeWidth = w * 0.07
+        ..shader = LinearGradient(
+          colors: [_coral.withValues(alpha: a), _orange.withValues(alpha: a)],
+        ).createShader(Rect.fromLTWH(0, 0, w, size.height));
+      canvas.drawArc(rect, -math.pi * 3 / 4, math.pi / 2, false, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ArcsPainter old) => old.progress != progress;
+}
+
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key, required this.onDone});
+  final VoidCallback onDone;
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 2600));
+
+  @override
+  void initState() {
+    super.initState();
+    _c.forward().whenComplete(() {
+      if (mounted) widget.onDone();
+    });
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(colors: [Color(0xFFFFF8F3), Color(0xFFFFE3E8)], begin: Alignment.topCenter, end: Alignment.bottomCenter),
+        ),
+        child: Center(
+          child: AnimatedBuilder(
+            animation: _c,
+            builder: (context, _) {
+              final logo = Interval(0, 0.7, curve: Curves.easeOut).transform(_c.value);
+              final text = Interval(0.55, 0.85, curve: Curves.easeOut).transform(_c.value);
+              final sub = Interval(0.7, 1.0, curve: Curves.easeOut).transform(_c.value);
+              return Column(mainAxisSize: MainAxisSize.min, children: [
+                WifiLogo(progress: logo, size: 170),
+                const SizedBox(height: 8),
+                Opacity(
+                  opacity: text,
+                  child: Transform.translate(
+                    offset: Offset(0, 14 * (1 - text)),
+                    child: const Text.rich(TextSpan(children: [
+                      TextSpan(text: 'WiFi', style: TextStyle(color: _ink)),
+                      TextSpan(text: 'Match', style: TextStyle(color: _coral)),
+                    ]), style: TextStyle(fontSize: 34, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Opacity(
+                  opacity: sub,
+                  child: Text('同じWiFiの人と、つながろう。', style: TextStyle(fontSize: 14, color: _ink.withValues(alpha: 0.6))),
+                ),
+              ]);
+            },
+          ),
+        ),
       ),
+    );
+  }
+}
+
+/// 起動時にロゴのアニメーションを見せてから、本編の画面に切り替える。
+class _AppGate extends StatefulWidget {
+  const _AppGate();
+
+  @override
+  State<_AppGate> createState() => _AppGateState();
+}
+
+class _AppGateState extends State<_AppGate> {
+  bool _done = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 450),
+      child: _done
+          ? ListenableBuilder(
+              key: const ValueKey('app'),
+              listenable: mesh,
+              builder: (context, _) => mesh.me == null ? const OnboardingScreen() : const HomeScreen(),
+            )
+          : SplashScreen(key: const ValueKey('splash'), onDone: () => setState(() => _done = true)),
     );
   }
 }
@@ -279,7 +486,7 @@ class OnboardingScreen extends StatelessWidget {
       body: SafeArea(
         child: ListView(padding: const EdgeInsets.all(20), children: [
           const SizedBox(height: 16),
-          const Center(child: Text('📶', style: TextStyle(fontSize: 56))),
+          const Center(child: WifiLogo(size: 110)),
           const SizedBox(height: 8),
           const Text('同じWiFiの人と、つながろう。',
               textAlign: TextAlign.center, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
@@ -386,17 +593,29 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         return Scaffold(
           appBar: AppBar(
             backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-            title: const Text.rich(TextSpan(children: [
-              TextSpan(text: '📶 WiFi', style: TextStyle(fontWeight: FontWeight.w800)),
-              TextSpan(text: 'Match', style: TextStyle(fontWeight: FontWeight.w800, color: _coral)),
-            ])),
+            title: const Row(mainAxisSize: MainAxisSize.min, children: [
+              WifiLogo(size: 34),
+              SizedBox(width: 8),
+              Text.rich(TextSpan(children: [
+                TextSpan(text: 'WiFi', style: TextStyle(fontWeight: FontWeight.w900, color: _ink)),
+                TextSpan(text: 'Match', style: TextStyle(fontWeight: FontWeight.w900, color: _coral)),
+              ])),
+            ]),
             actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 16),
-                child: Row(children: [
-                  Icon(Icons.circle, size: 10, color: mesh.running ? const Color(0xFF1FB57A) : Colors.grey),
+              Container(
+                margin: const EdgeInsets.only(right: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: mesh.running ? const Color(0xFFE3F8EE) : const Color(0xFFEFEFEF),
+                  borderRadius: BorderRadius.circular(99),
+                ),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(Icons.circle, size: 9, color: mesh.running ? const Color(0xFF1FB57A) : Colors.grey),
                   const SizedBox(width: 6),
-                  Text(mesh.running ? '近くに $online人' : '停止中', style: TextStyle(color: Theme.of(context).hintColor)),
+                  Text(
+                    mesh.running ? '近くに $online人' : '停止中',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: mesh.running ? const Color(0xFF127A52) : Colors.black54),
+                  ),
                 ]),
               ),
             ],
@@ -623,7 +842,9 @@ class Bubble extends StatelessWidget {
       constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.68),
       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
       decoration: BoxDecoration(
-        color: mine ? _coral : cs.surface,
+        color: mine ? null : cs.surface,
+        gradient: mine ? _brandGradient : null,
+        boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 6, offset: Offset(0, 2))],
         borderRadius: BorderRadius.only(
           topLeft: const Radius.circular(18),
           topRight: const Radius.circular(18),
