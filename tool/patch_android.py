@@ -13,6 +13,7 @@ perms = [
     "android.permission.ACCESS_WIFI_STATE",
     "android.permission.ACCESS_NETWORK_STATE",
     "android.permission.CHANGE_WIFI_MULTICAST_STATE",
+    "com.google.android.gms.permission.AD_ID",  # 広告ID（Android 13 以降で広告を出すために必要）
 ]
 missing = [p for p in perms if p not in s]
 if missing:
@@ -22,6 +23,17 @@ if missing:
 # 同じWiFi内の端末同士は http で直接通信するため平文通信を許可
 if "usesCleartextTraffic" not in s:
     s = s.replace("<application", '<application\n        android:usesCleartextTraffic="true"', 1)
+
+# AdMob のアプリID（広告を表示するために必須。公開してよいID）
+ADMOB_APP_ID = "ca-app-pub-6787171058926480~6110309787"
+if "com.google.android.gms.ads.APPLICATION_ID" not in s:
+    meta = (
+        '    <meta-data\n'
+        '            android:name="com.google.android.gms.ads.APPLICATION_ID"\n'
+        f'            android:value="{ADMOB_APP_ID}"/>\n'
+        '    </application>'
+    )
+    s = s.replace("</application>", meta, 1)
 
 s = re.sub(r'android:label="[^"]*"', 'android:label="WiFi Match"', s, count=1)
 manifest.write_text(s, encoding="utf-8")
