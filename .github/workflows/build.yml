@@ -95,6 +95,8 @@ jobs:
           echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/upload-keystore.pfx"
           echo "ANDROID_KEYSTORE_FILE=$RUNNER_TEMP/upload-keystore.pfx" >> "$GITHUB_ENV"
           keytool -list -storetype PKCS12 -keystore "$RUNNER_TEMP/upload-keystore.pfx" -storepass:env ANDROID_KEYSTORE_PASSWORD
+          ALIAS=$(keytool -list -storetype PKCS12 -keystore "$RUNNER_TEMP/upload-keystore.pfx" -storepass:env ANDROID_KEYSTORE_PASSWORD | grep PrivateKeyEntry | head -n 1 | cut -d, -f1)
+          echo "ANDROID_KEY_ALIAS=$ALIAS" >> "$GITHUB_ENV"
 
       - name: Android プロジェクトを生成して署名を設定
         if: steps.key.outputs.have == 'true'
