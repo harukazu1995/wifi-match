@@ -1,4 +1,4 @@
-// すれ違い通信（Bluetooth）。実際の発信と探索は Android 側（ProximityService.kt）が行い、
+// ふれあいレーダー（Bluetooth）。実際の発信と探索は Android 側（ProximityService.kt）が行い、
 // ここでは、オン・オフの操作と、すれ違った人の一覧の読み込みをする。
 import 'dart:async';
 import 'dart:convert';
@@ -64,9 +64,9 @@ class ProximityService extends ChangeNotifier {
       'profileId': me.id,
       'name': me.name,
       'emojiIdx': idx < 0 ? 0 : idx,
-      'notifTitle': tr('👣 すれ違いました'),
-      'notifBody': tr('{name} さんとすれ違いました'),
-      'ongoing': tr('すれ違い通信がオンです'),
+      'notifTitle': tr('📡 ふれあいレーダー'),
+      'notifBody': tr('{name} さんが近くにいます'),
+      'ongoing': tr('ふれあいレーダーがオンです'),
       'blockedIds': _blockedIds.toList(),
       'blockedSigs': blockedSigs,
     });
