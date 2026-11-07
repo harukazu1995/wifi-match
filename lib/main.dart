@@ -7,6 +7,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:in_app_purchase/in_app_purchase.dart' show ProductDetails;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'billing.dart';
@@ -1025,7 +1026,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   child: const Icon(Icons.directions_walk),
                 ),
                 selectedIcon: const Icon(Icons.directions_walk),
-                label: tr('すれ違い'),
+                label: tr('レーダー'),
               ),
               NavigationDestination(icon: const Icon(Icons.person_outline), selectedIcon: const Icon(Icons.person), label: tr('自分')),
             ],
@@ -1589,7 +1590,7 @@ class PlazaTab extends StatelessWidget {
   }
 }
 
-// ======================= すれ違い通信 =======================
+// ======================= ふれあいレーダー =======================
 
 /// 「みんな」タブの上に出す、新機能の宣伝カード（×で消せる。オンにすると出なくなる）
 class PromoCard extends StatelessWidget {
@@ -1607,7 +1608,7 @@ class PromoCard extends StatelessWidget {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(children: [
                 const Expanded(
-                  child: Text('🚶 新機能：すれ違い通信', style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w800)),
+                  child: Text('📡 新機能：ふれあいレーダー', style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w800)),
                 ),
                 IconButton(
                   onPressed: Prefs.hidePromo,
@@ -1615,7 +1616,7 @@ class PromoCard extends StatelessWidget {
                   visualDensity: VisualDensity.compact,
                 ),
               ]),
-              const Text('WiFiがなくても、Bluetoothで近くの人とすれ違ったら通知。最初はオフです。', style: TextStyle(color: Colors.white)),
+              const Text('WiFiがなくても、Bluetoothで近くの人に気づける新機能。最初はオフです。', style: TextStyle(color: Colors.white)),
               const SizedBox(height: 10),
               FilledButton(
                 onPressed: () => homeTab.value = 3,
@@ -1644,9 +1645,208 @@ Future<void> reportEncounter(Encounter e) async {
   );
   if (ok != true) return;
   final at = DateTime.fromMillisecondsSinceEpoch(e.at).toIso8601String();
-  await Clipboard.setData(ClipboardData(text: 'WiFi Match 通報(すれ違い)\n相手: ${e.name}\n日時: $at'));
+  await Clipboard.setData(ClipboardData(text: 'WiFi Match 通報(レーダー)\n相手: ${e.name}\n日時: $at'));
   await prox.blockEncounter(e);
   toast('通報して、非表示にしました');
+}
+
+/// 広がる電波の輪（オンの間は動く）
+class RadarView extends StatefulWidget {
+  const RadarView({super.key, required this.active, this.size = 120});
+  final bool active;
+  final double size;
+
+  @override
+  State<RadarView> createState() => _RadarViewState();
+}
+
+class _RadarViewState extends State<RadarView> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(seconds: 3))..repeat();
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+        width: widget.size,
+        height: widget.size,
+        child: AnimatedBuilder(
+          animation: _c,
+          builder: (context, _) => CustomPaint(painter: _RadarPainter(_c.value, widget.active)),
+        ),
+      );
+}
+
+class _RadarPainter extends CustomPainter {
+  _RadarPainter(this.t, this.active);
+  final double t;
+  final bool active;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = size.center(Offset.zero);
+    final maxR = size.width / 2;
+    for (var k = 0; k < 3; k++) {
+      final p = active ? (t + k / 3) % 1.0 : 0.35 + k * 0.22;
+      final a = active ? (1 - p) : 0.55 - k * 0.15;
+      final paint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3
+        ..color = Color.fromRGBO(255, 255, 255, (a * 0.9).clamp(0.0, 1.0));
+      canvas.drawCircle(c, maxR * (0.25 + 0.75 * p), paint);
+    }
+    canvas.drawCircle(c, maxR * 0.16, Paint()..color = Colors.white);
+    if (active) {
+      final blip = (math.sin(t * 2 * math.pi) + 1) / 2;
+      final fill = Paint()..color = Color.fromRGBO(255, 255, 255, 0.4 + 0.6 * blip);
+      canvas.drawCircle(c + Offset(math.cos(0.8) * maxR * 0.62, math.sin(0.8) * maxR * 0.62), 5, fill);
+      canvas.drawCircle(c + Offset(math.cos(3.9) * maxR * 0.5, math.sin(3.9) * maxR * 0.5), 4, fill);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_RadarPainter old) => old.t != t || old.active != active;
+}
+
+/// 料金のカード。購入前は、特典・プラン（年額／月額）・購入ボタンを見せる
+class PaywallCard extends StatelessWidget {
+  const PaywallCard({super.key});
+
+  Widget _benefit(String text) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Icon(Icons.check_circle, color: Colors.white, size: 20),
+          const SizedBox(width: 10),
+          Expanded(child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 14.5, height: 1.3))),
+        ]),
+      );
+
+  Widget _plan(String id, String title, ProductDetails? pd, String per, String? badge) {
+    final sel = billing.effectiveSelected == id;
+    final fg = sel ? _coral : Colors.white;
+    return Expanded(
+      child: GestureDetector(
+        onTap: pd == null ? null : () => billing.select(id),
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          padding: const EdgeInsets.fromLTRB(10, 12, 10, 14),
+          decoration: BoxDecoration(
+            color: sel ? Colors.white : const Color(0x33FFFFFF),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: sel ? Colors.white : const Color(0x66FFFFFF), width: 2),
+          ),
+          child: Column(children: [
+            SizedBox(
+              height: 24,
+              child: badge == null
+                  ? null
+                  : Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                      decoration: BoxDecoration(color: sel ? _coral : Colors.white, borderRadius: BorderRadius.circular(99)),
+                      child: Text(badge, style: TextStyle(color: sel ? Colors.white : _coral, fontSize: 11.5, fontWeight: FontWeight.w800)),
+                    ),
+            ),
+            const SizedBox(height: 4),
+            Text(title, style: TextStyle(color: fg, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 4),
+            Text(pd?.price ?? '準備中', style: TextStyle(color: fg, fontSize: 22, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 2),
+            Text(per, style: TextStyle(color: fg, fontSize: 12)),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+        listenable: billing,
+        builder: (context, _) {
+          if (billing.premium) {
+            return Container(
+              margin: const EdgeInsets.only(bottom: 14),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(gradient: _brandGradient, borderRadius: BorderRadius.circular(22)),
+              child: const Row(children: [
+                Icon(Icons.workspace_premium, color: Colors.white),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text('プレミアムをご利用中です。ありがとうございます！',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
+                ),
+              ]),
+            );
+          }
+          final save = billing.yearlySavingPercent;
+          return Container(
+            margin: const EdgeInsets.only(bottom: 14),
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              gradient: _brandGradient,
+              borderRadius: BorderRadius.circular(26),
+              boxShadow: const [BoxShadow(color: Color(0x40FF4D6D), blurRadius: 24, offset: Offset(0, 10))],
+            ),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Row(children: [
+                Icon(Icons.workspace_premium, color: Colors.white, size: 26),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text('WiFi Match プレミアム', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
+                ),
+              ]),
+              const SizedBox(height: 6),
+              const Text('通りすがりの出会いを、見逃さない。',
+                  style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900, height: 1.25)),
+              if (kProximityFreeBeta)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(99)),
+                    child: const Text('ベータ期間中は、無料で使えます', style: TextStyle(color: _coral, fontWeight: FontWeight.w800, fontSize: 13)),
+                  ),
+                ),
+              const SizedBox(height: 14),
+              _benefit('Bluetoothで、近くの人にすぐ気づく'),
+              _benefit('WiFiがなくても、どこでも使える'),
+              _benefit('近くにいた人を、一覧であとから見返せる'),
+              _benefit('毎日変わる識別番号で、つきまといを防止'),
+              _benefit('いつでも解約できる'),
+              const SizedBox(height: 8),
+              Row(children: [
+                _plan(kProductYearly, '年額プラン', billing.yearly, '1年ごと', save != null ? '$save% おトク' : 'おすすめ'),
+                _plan(kProductMonthly, '月額プラン', billing.monthly, '1か月ごと', null),
+              ]),
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: billing.selectedProduct == null || billing.busy ? null : billing.buy,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: _coral,
+                    disabledBackgroundColor: const Color(0x66FFFFFF),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: billing.busy
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Text('プレミアムを始める', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+                ),
+              ),
+              Center(
+                child: TextButton(onPressed: billing.restore, child: const Text('購入を復元', style: TextStyle(color: Colors.white))),
+              ),
+              const Text(
+                'お支払いは Google Play のアカウントに請求されます。定期購入は、期間が終わる24時間前までに解約しない限り、自動で更新されます。解約は、Google Play の「定期購入」から、いつでもできます。',
+                style: TextStyle(color: Color(0xCCFFFFFF), fontSize: 11, height: 1.4),
+              ),
+            ]),
+          );
+        },
+      );
 }
 
 class ProximityTab extends StatelessWidget {
@@ -1657,7 +1857,7 @@ class ProximityTab extends StatelessWidget {
   Future<void> _toggle(bool v) async {
     if (!v) {
       await prox.turnOff();
-      toast('すれ違い通信をオフにしました');
+      toast('ふれあいレーダーをオフにしました');
       return;
     }
     final me = mesh.me;
@@ -1671,7 +1871,7 @@ class ProximityTab extends StatelessWidget {
     }
     final r = await prox.turnOn(me, mesh.blocked);
     if (r == 'started') {
-      toast('すれ違い通信をオンにしました');
+      toast('ふれあいレーダーをオンにしました');
     } else if (r == 'bt_off') {
       toast('Bluetoothをオンにしてください');
     } else if (r == 'unsupported') {
@@ -1691,66 +1891,66 @@ class ProximityTab extends StatelessWidget {
         return RefreshIndicator(
           onRefresh: prox.refresh,
           child: ListView(padding: const EdgeInsets.all(16), children: [
-            const _Header('すれ違い通信', 'Bluetoothで、WiFiがなくても、近くの人とすれ違ったらお知らせ'),
+            Container(
+              margin: const EdgeInsets.only(bottom: 14),
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                gradient: _brandGradient,
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: const [BoxShadow(color: Color(0x40FF4D6D), blurRadius: 24, offset: Offset(0, 10))],
+              ),
+              child: Row(children: [
+                RadarView(active: prox.enabled, size: 110),
+                const SizedBox(width: 16),
+                const Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('ふれあいレーダー', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900)),
+                    SizedBox(height: 6),
+                    Text('Bluetoothで、WiFiがなくても、近くの人に気づける',
+                        style: TextStyle(color: Colors.white, fontSize: 14, height: 1.35)),
+                  ]),
+                ),
+              ]),
+            ),
+            if (!prox.supported) const _Notice('この端末は、Bluetooth LE に対応していません'),
+            Card(
+              child: SwitchListTile(
+                value: prox.enabled,
+                onChanged: prox.supported ? _toggle : null,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+                title: const Text('ふれあいレーダー', style: TextStyle(fontWeight: FontWeight.w800)),
+                subtitle: const Text('オンにすると、アプリを閉じていても、近くの人を探します（電池を使います）'),
+              ),
+            ),
+            const PaywallCard(),
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  const Text('🚶 すれ違い通信', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+                  const Text('📡 ふれあいレーダー', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
                   const SizedBox(height: 8),
-                  const Text('・すれ違った人を、通知と一覧でお知らせ'),
+                  const Text('・近くにいた人を、通知と一覧でお知らせ'),
                   const Text('・WiFiがなくても動きます（Bluetooth）'),
                   const Text('・オフで始まり、いつでも切れます'),
                   const Text('・ブロックした人には、表示されません'),
                 ]),
               ),
             ),
-            if (!prox.supported) const _Notice('この端末は、Bluetooth LE に対応していません'),
-            if (kProximityFreeBeta) const _Notice('ベータ版：いまは無料で試せます'),
-            SwitchListTile(
-              value: prox.enabled,
-              onChanged: prox.supported ? _toggle : null,
-              contentPadding: EdgeInsets.zero,
-              title: const Text('すれ違い通信'),
-              subtitle: const Text('オンにすると、アプリを閉じていても、近くの人を探します（電池を使います）'),
-            ),
-            if (!_allowed)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    const Text('プレミアムプラン（月額）', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 4),
-                    const Text('すれ違い通信が使えるようになります'),
-                    const SizedBox(height: 6),
-                    billing.product == null ? const Text('現在、準備中です') : Text('月額 ${billing.product!.price}'),
-                    const SizedBox(height: 8),
-                    Row(children: [
-                      FilledButton(
-                        onPressed: billing.product == null || billing.busy ? null : billing.buy,
-                        child: const Text('購入する'),
-                      ),
-                      const SizedBox(width: 8),
-                      TextButton(onPressed: billing.restore, child: const Text('購入を復元')),
-                    ]),
-                  ]),
-                ),
-              ),
             Text(
               'あなたのニックネームとアイコンが、Bluetoothで近くの端末に発信されます。発信する識別番号は毎日変わります。つきまといを防ぐため、初期設定はオフです。',
               style: TextStyle(fontSize: 12.5, color: hint),
             ),
             const SizedBox(height: 16),
-            const Text('すれ違った人', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+            const Text('ふれあった人', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
             const SizedBox(height: 8),
-            if (shown.isEmpty) const EmptyState('🚶', 'まだ誰ともすれ違っていません。\nオンにして、外に出かけてみよう。'),
+            if (shown.isEmpty) const EmptyState('📡', 'まだ誰とも、ふれあっていません。\nオンにして、外に出かけてみよう。'),
             for (final e in shown)
               Card(
                 child: ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   leading: Avatar(e.emoji, online: false, size: 48),
                   title: Text(e.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-                  subtitle: Text('${hhmm(e.at)} にすれ違い'),
+                  subtitle: Text('${hhmm(e.at)} に近くにいました'),
                   trailing: TextButton(
                     onPressed: () => reportEncounter(e),
                     child: Text('通報', style: TextStyle(color: hint)),
