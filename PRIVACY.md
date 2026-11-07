@@ -22,6 +22,16 @@ WiFi Match（以下「本アプリ」）は、同じWiFiにいる本アプリの
 本アプリには、運営者のサーバーがありません。運営者は、プロフィールやメッセージを受け取ることも、保管することもありません。
 氏名、メールアドレス、電話番号、GPSなどの位置情報は、取得しません。
 
+## 2-2. すれ違い通信（Bluetooth）について
+
+すれ違い通信をオンにしたときだけ、次の情報を使います（初期設定はオフです）。
+
+- あなたのニックネームとアイコン、毎日変わる識別番号を、Bluetoothで近くの端末に発信します。
+- 近くにいる、本アプリの利用者の同じ情報を受け取り、「すれ違った人」の一覧として、この端末だけに保存します（最大100件）。運営者のサーバーには送られません。
+- 端末の位置情報（GPS）は取得しません。Android 12 以降では、位置情報の権限は使いません。
+- いつでも、アプリの「すれ違い」タブでオフにできます。
+- 有料プランの購入の状態は、Google Play が管理します。運営者は、お支払い情報を受け取りません。
+
 ## 3. 広告について
 
 本アプリは、広告配信のために Google AdMob を利用しています。AdMob（Google）は、広告の配信や効果測定のために、広告ID、IPアドレス、端末の情報、アプリの利用状況などを取得することがあります。取得された情報は、Google のプライバシーポリシーに従って扱われます。
@@ -55,4 +65,4 @@ WiFi Match（以下「本アプリ」）は、同じWiFiにいる本アプリの
 
 # WiFi Match Privacy Policy (summary)
 
-WiFi Match has no server. Your profile (nickname, emoji, short bio, interests), messages and photos you choose to send in one-to-one chats are stored on your device and are sent directly to other WiFi Match users on the same Wi-Fi network. The developer does not receive or store them. The app does not collect your name, email, phone number, or GPS location. Ads are served by Google AdMob, which may collect advertising ID, IP address and device information under Google's policies (https://policies.google.com/technologies/partner-sites); a consent form is shown where required. You can delete all local data in the app ("退出してデータを削除") or by uninstalling. The app is for users aged 18 and over. Contact: https://github.com/harukazu1995/wifi-match/issues
+WiFi Match has no server. Your profile (nickname, emoji, short bio, interests), messages and photos you choose to send in one-to-one chats are stored on your device and are sent directly to other WiFi Match users on the same Wi-Fi network. The developer does not receive or store them. The app does not collect your name, email, phone number, or GPS location. Passing-by mode (Bluetooth) is off by default; when on, your nickname, icon and a daily-changing ID are broadcast to nearby devices, and the list of people you passed is stored only on your device. Subscriptions are handled by Google Play. Ads are served by Google AdMob, which may collect advertising ID, IP address and device information under Google's policies (https://policies.google.com/technologies/partner-sites); a consent form is shown where required. You can delete all local data in the app ("退出してデータを削除") or by uninstalling. The app is for users aged 18 and over. Contact: https://github.com/harukazu1995/wifi-match/issues
