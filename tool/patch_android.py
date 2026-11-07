@@ -14,6 +14,7 @@ perms = [
     "android.permission.ACCESS_WIFI_STATE",
     "android.permission.ACCESS_NETWORK_STATE",
     "android.permission.CHANGE_WIFI_MULTICAST_STATE",
+    "android.permission.POST_NOTIFICATIONS",  # 通知（Android 13 以降）
     "com.google.android.gms.permission.AD_ID",  # 広告ID（Android 13 以降で広告を出すために必要）
 ]
 missing = [p for p in perms if p not in s]
