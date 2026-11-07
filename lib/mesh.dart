@@ -14,6 +14,7 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const int kDiscoveryPort = 47801;
@@ -40,6 +41,9 @@ List<String> parseTags(String s) => s
     .toSet()
     .take(8)
     .toList();
+
+/// 保存した写真のファイル名（24文字の英数字 + 拡張子）。これ以外の名前は使わない
+final RegExp kImgName = RegExp(r'^[0-9a-f]{24}\.(jpg|png)$');
 
 String _randomId() {
   final r = Random.secure();
@@ -89,15 +93,16 @@ class Peer {
 }
 
 class ChatMessage {
-  ChatMessage({required this.id, required this.from, required this.text, required this.at, this.name = '', this.emoji = ''});
+  ChatMessage({required this.id, required this.from, required this.text, required this.at, this.name = '', this.emoji = '', this.img});
   final String id;
   final String from;
   final String text;
   final int at;
   final String name;
   final String emoji;
+  final String? img; // 写真のファイル名（写真つきのメッセージだけ）
 
-  Map<String, dynamic> toJson() => {'id': id, 'from': from, 'text': text, 'at': at, 'name': name, 'emoji': emoji};
+  Map<String, dynamic> toJson() => {'id': id, 'from': from, 'text': text, 'at': at, 'name': name, 'emoji': emoji, 'img': img};
 
   static ChatMessage? tryParse(Object? j) {
     if (j is! Map) return null;
@@ -112,6 +117,7 @@ class ChatMessage {
       at: at,
       name: j['name'] is String ? clip(j['name'] as String, 20) : '',
       emoji: j['emoji'] is String ? clip(j['emoji'] as String, 4) : '',
+      img: j['img'] is String && kImgName.hasMatch(j['img'] as String) ? j['img'] as String : null,
     );
   }
 }
@@ -159,6 +165,30 @@ class MeshService extends ChangeNotifier {
   final HttpClient _client = HttpClient()..connectionTimeout = const Duration(seconds: 4);
   SharedPreferences? _prefs;
 
+  // ---------------- 写真 ----------------
+  static Directory? imgDir;
+  static const int kMaxImageBytes = 600000;
+
+  File? imgFile(ChatMessage m) {
+    final d = imgDir, n = m.img;
+    if (d == null || n == null || !kImgName.hasMatch(n)) return null;
+    return File('${d.path}/$n');
+  }
+
+  static String? _imgExt(List<int> b) {
+    if (b.length > 3 && b[0] == 0xFF && b[1] == 0xD8 && b[2] == 0xFF) return 'jpg';
+    if (b.length > 8 && b[0] == 0x89 && b[1] == 0x50 && b[2] == 0x4E && b[3] == 0x47) return 'png';
+    return null;
+  }
+
+  Future<String> _saveImage(List<int> bytes, String ext) async {
+    final d = imgDir;
+    if (d == null) throw MeshException('写真を保存できません');
+    final name = '${_randomId()}.$ext';
+    await File('${d.path}/$name').writeAsBytes(bytes, flush: true);
+    return name;
+  }
+
   // ---------------- 状態 ----------------
   bool isMatch(String id) => likesOut.contains(id) && likesIn.contains(id) && !blocked.contains(id);
 
@@ -196,6 +226,12 @@ class MeshService extends ChangeNotifier {
   // ---------------- 保存 ----------------
   Future<void> load() async {
     _prefs = await SharedPreferences.getInstance();
+    try {
+      final base = await getApplicationSupportDirectory();
+      final d = Directory('${base.path}/imgs');
+      await d.create(recursive: true);
+      imgDir = d;
+    } catch (_) {}
     final raw = _prefs!.getString('wm_state');
     if (raw == null) return;
     try {
@@ -268,6 +304,16 @@ class MeshService extends ChangeNotifier {
     plaza.clear();
     unread.clear();
     unreadPlaza = 0;
+    try {
+      final d = imgDir;
+      if (d != null && await d.exists()) {
+        await for (final f in d.list()) {
+          try {
+            await f.delete();
+          } catch (_) {}
+        }
+      }
+    } catch (_) {}
     await (_prefs ??= await SharedPreferences.getInstance()).remove('wm_state');
     notifyListeners();
   }
@@ -405,10 +451,12 @@ class MeshService extends ChangeNotifier {
     Map<String, dynamic> out = {'ok': true};
     try {
       if (req.method != 'POST') throw _Http(404, 'not found');
+      final isDm = req.uri.path == '/dm';
+      final limit = isDm ? 900000 : 16384;
       final bytes = <int>[];
-      await for (final chunk in req.timeout(const Duration(seconds: 5))) {
+      await for (final chunk in req.timeout(Duration(seconds: isDm ? 20 : 5))) {
         bytes.addAll(chunk);
-        if (bytes.length > 16384) throw _Http(413, 'too large');
+        if (bytes.length > limit) throw _Http(413, 'too large');
       }
       final body = jsonDecode(utf8.decode(bytes));
       if (body is! Map) throw _Http(400, 'bad body');
@@ -451,7 +499,25 @@ class MeshService extends ChangeNotifier {
         case '/dm': {
           final id = verify(body['from']);
           if (!isMatch(id)) throw _Http(403, 'not matched');
-          final m = ChatMessage.tryParse({...body, 'from': id});
+          String? imgName;
+          final raw64 = body['img64'];
+          if (raw64 is String && raw64.isNotEmpty) {
+            if (raw64.length > 820000) throw _Http(413, 'too large');
+            final List<int> data;
+            try {
+              data = base64Decode(raw64);
+            } catch (_) {
+              throw _Http(400, 'bad image');
+            }
+            final ext = _imgExt(data);
+            if (ext == null || data.length > kMaxImageBytes) throw _Http(400, 'bad image');
+            try {
+              imgName = await _saveImage(data, ext);
+            } catch (_) {
+              throw _Http(500, 'save failed');
+            }
+          }
+          final m = ChatMessage.tryParse({...body, 'from': id, 'img': imgName});
           if (m == null) throw _Http(400, 'bad message');
           final list = dms.putIfAbsent(id, () => []);
           if (!list.any((x) => x.id == m.id)) {
@@ -499,14 +565,15 @@ class MeshService extends ChangeNotifier {
   }
 
   // ---------------- 送信 ----------------
-  Future<Map<String, dynamic>> _post(Peer peer, String path, Map<String, dynamic> body) async {
-    final req = await _client.post(peer.address.address, peer.port, path).timeout(const Duration(seconds: 5));
+  Future<Map<String, dynamic>> _post(Peer peer, String path, Map<String, dynamic> body,
+      {Duration timeout = const Duration(seconds: 5)}) async {
+    final req = await _client.post(peer.address.address, peer.port, path).timeout(timeout);
     final bytes = utf8.encode(jsonEncode(body));
     req.headers.contentType = ContentType.json;
     req.headers.contentLength = bytes.length; // 分割送信にせず、サイズを明示して送る
     req.add(bytes);
-    final resp = await req.close().timeout(const Duration(seconds: 5));
-    final text = await utf8.decodeStream(resp).timeout(const Duration(seconds: 5));
+    final resp = await req.close().timeout(timeout);
+    final text = await utf8.decodeStream(resp).timeout(timeout);
     if (resp.statusCode == 409) throw MeshException('相手の端末がまだあなたを見つけていません。数秒後にもう一度試してください');
     if (resp.statusCode == 403) throw MeshException('この相手には送れません');
     if (resp.statusCode != 200) throw MeshException('相手の端末に届きませんでした（${resp.statusCode}）');
@@ -572,6 +639,26 @@ class MeshService extends ChangeNotifier {
     final m = ChatMessage(id: _randomId(), from: me!.id, text: t, at: DateTime.now().millisecondsSinceEpoch);
     await _post(peer, '/dm', {'from': me!.id, 'id': m.id, 'text': m.text, 'at': m.at});
     dms.putIfAbsent(id, () => []).add(m);
+    await _save();
+    notifyListeners();
+  }
+
+  Future<void> sendImage(String id, List<int> bytes) async {
+    if (!isMatch(id)) throw MeshException('マッチした相手とだけ話せます');
+    final ext = _imgExt(bytes);
+    if (ext == null) throw MeshException('この形式の写真は送れません');
+    if (bytes.length > kMaxImageBytes) throw MeshException('写真が大きすぎます。別の写真を選んでください');
+    final peer = _onlinePeer(id);
+    final msgId = _randomId();
+    final at = DateTime.now().millisecondsSinceEpoch;
+    await _post(
+      peer,
+      '/dm',
+      {'from': me!.id, 'id': msgId, 'text': '📷 写真', 'at': at, 'img64': base64Encode(bytes)},
+      timeout: const Duration(seconds: 25),
+    );
+    final name = await _saveImage(bytes, ext);
+    dms.putIfAbsent(id, () => []).add(ChatMessage(id: msgId, from: me!.id, text: '📷 写真', at: at, img: name));
     await _save();
     notifyListeners();
   }
