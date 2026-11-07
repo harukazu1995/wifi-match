@@ -463,7 +463,7 @@ class AdService {
     );
   }
 
-  /// 画面の切り替わりなど、自然な区切りで全画面広告を出す。出しすぎないよう、3分に1回まで。
+  /// 画面の切り替わりなど、自然な区切りで全画面広告を出す。出しすぎないよう、2分に1回まで。
   static void maybeShowInterstitial() {
     if (!ready.value) return;
     final ad = _inter;
@@ -471,7 +471,7 @@ class AdService {
       _loadInterstitial();
       return;
     }
-    if (DateTime.now().difference(_lastInter) < const Duration(minutes: 3)) return;
+    if (DateTime.now().difference(_lastInter) < const Duration(minutes: 2)) return;
     _inter = null;
     _lastInter = DateTime.now();
     ad.fullScreenContentCallback = FullScreenContentCallback(
@@ -487,10 +487,10 @@ class AdService {
     ad.show();
   }
 
-  /// タブを切り替えたときに数える。6回に1回、広告を出してよいか確かめる。
+  /// タブを切り替えたときに数える。4回に1回、広告を出してよいか確かめる。
   static void tabChanged() {
     _breaks++;
-    if (_breaks % 6 == 0) maybeShowInterstitial();
+    if (_breaks % 4 == 0) maybeShowInterstitial();
   }
 
   /// 広告を出してよい状態になったら true
@@ -1497,6 +1497,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       itemBuilder: (_, i) => Bubble(msgs[i]),
                     ),
             ),
+            const AdBanner(),
             Composer(
               hint: online ? 'メッセージ…' : '相手がオフラインです',
               onSend: (t) => mesh.sendDm(p.id, t),
