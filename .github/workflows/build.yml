@@ -53,18 +53,25 @@ jobs:
   bundle:
     runs-on: ubuntu-latest
     env:
-      KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      SIGNING_BUNDLE: ${{ secrets.ANDROID_SIGNING_BUNDLE }}
     steps:
       - uses: actions/checkout@v4
 
       - name: 署名鍵が登録されているか確認
         id: key
         run: |
-          if [ -n "$KEYSTORE_B64" ]; then
+          if [ -n "$SIGNING_BUNDLE" ]; then
             echo "have=true" >> "$GITHUB_OUTPUT"
+            KS_B64=$(printf '%s' "$SIGNING_BUNDLE" | sed -n 1p | tr -d '\r\n ')
+            KS_PASS=$(printf '%s' "$SIGNING_BUNDLE" | sed -n 2p | tr -d '\r\n')
+            KS_ALIAS=$(printf '%s' "$SIGNING_BUNDLE" | sed -n 3p | tr -d '\r\n')
+            echo "::add-mask::$KS_PASS"
+            {
+              echo "KEYSTORE_B64=$KS_B64"
+              echo "ANDROID_KEYSTORE_PASSWORD=$KS_PASS"
+              echo "ANDROID_KEY_ALIAS=$KS_ALIAS"
+              echo "ANDROID_KEY_PASSWORD=$KS_PASS"
+            } >> "$GITHUB_ENV"
           else
             echo "have=false" >> "$GITHUB_OUTPUT"
             echo "署名鍵が未登録のため、ストア用 AAB は作りません（APK には影響しません）"
