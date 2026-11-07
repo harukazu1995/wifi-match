@@ -22,6 +22,31 @@ if missing:
     lines = "".join(f'\n    <uses-permission android:name="{p}" />' for p in missing)
     s = re.sub(r"(<manifest\b[^>]*>)", r"\1" + lines, s, count=1)
 
+# すれ違い通信（Bluetooth）に必要な権限・機能・常駐サービス
+ble_perms = [
+    ("android.permission.BLUETOOTH", ' android:maxSdkVersion="30"'),
+    ("android.permission.BLUETOOTH_ADMIN", ' android:maxSdkVersion="30"'),
+    ("android.permission.BLUETOOTH_SCAN", ' android:usesPermissionFlags="neverForLocation"'),
+    ("android.permission.BLUETOOTH_ADVERTISE", ""),
+    ("android.permission.BLUETOOTH_CONNECT", ""),
+    ("android.permission.ACCESS_FINE_LOCATION", ' android:maxSdkVersion="30"'),
+    ("android.permission.FOREGROUND_SERVICE", ""),
+    ("android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE", ""),
+]
+ble_lines = "".join(
+    f'\n    <uses-permission android:name="{p}"{a} />' for p, a in ble_perms if f'"{p}"' not in s
+)
+if "android.hardware.bluetooth_le" not in s:
+    ble_lines += '\n    <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />'
+if ble_lines:
+    s = re.sub(r"(<manifest\b[^>]*>)", lambda m: m.group(1) + ble_lines, s, count=1)
+if "ProximityService" not in s:
+    s = s.replace(
+        "</application>",
+        '    <service\n            android:name=".ProximityService"\n            android:exported="false"\n            android:foregroundServiceType="connectedDevice" />\n    </application>',
+        1,
+    )
+
 # 同じWiFi内の端末同士は http で直接通信するため平文通信を許可
 if "usesCleartextTraffic" not in s:
     s = s.replace("<application", '<application\n        android:usesCleartextTraffic="true"', 1)
@@ -47,6 +72,7 @@ if not kt_dir.is_dir():
 for old in kt_dir.glob("MainActivity.*"):
     old.unlink()
 shutil.copy(root / "tool/MainActivity.kt", kt_dir / "MainActivity.kt")
+shutil.copy(root / "tool/ProximityService.kt", kt_dir / "ProximityService.kt")
 
 # アプリのアイコンを差し替え
 for density in ["mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"]:
