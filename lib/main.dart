@@ -9,12 +9,17 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'billing.dart';
 import 'i18n.dart';
 import 'mesh.dart';
+import 'proximity.dart';
 
 final mesh = MeshService();
 final navKey = GlobalKey<NavigatorState>();
 final messengerKey = GlobalKey<ScaffoldMessengerState>();
+final prox = ProximityService();
+final billing = Billing();
+final homeTab = ValueNotifier<int>(0);
 
 const kPrivacyUrl = 'https://github.com/harukazu1995/wifi-match/blob/main/PRIVACY.md';
 const kContactUrl = 'https://github.com/harukazu1995/wifi-match/issues';
@@ -30,6 +35,9 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await mesh.load();
   await Prefs.load();
+  await prox.load();
+  await billing.loadStored();
+  unawaited(billing.init());
   if (mesh.me != null) unawaited(mesh.start());
   runApp(const WifiMatchApp());
 }
@@ -285,12 +293,31 @@ class _AppGateState extends State<_AppGate> {
 /// 端末に保存する小さな設定（最初の説明を見たか、通知のオン・オフ）
 class Prefs {
   static bool introSeen = false;
+  static final ValueNotifier<bool> promoHidden = ValueNotifier<bool>(false);
+  static final ValueNotifier<bool> proxSeen = ValueNotifier<bool>(false);
 
   static Future<void> load() async {
     try {
       final p = await SharedPreferences.getInstance();
       introSeen = p.getBool('wm_intro_seen') ?? false;
+      promoHidden.value = p.getBool('wm_promo_hidden') ?? false;
+      proxSeen.value = p.getBool('wm_prox_seen') ?? false;
       Notifier.on.value = p.getBool('wm_notify') ?? true;
+    } catch (_) {}
+  }
+
+  static Future<void> hidePromo() async {
+    promoHidden.value = true;
+    try {
+      await (await SharedPreferences.getInstance()).setBool('wm_promo_hidden', true);
+    } catch (_) {}
+  }
+
+  static Future<void> markProxSeen() async {
+    if (proxSeen.value) return;
+    proxSeen.value = true;
+    try {
+      await (await SharedPreferences.getInstance()).setBool('wm_prox_seen', true);
     } catch (_) {}
   }
 
@@ -850,11 +877,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _sub = mesh.events.listen(_onEvent);
     unawaited(AdService.start());
     if (Notifier.on.value) unawaited(Notifier.requestPermission());
+    homeTab.addListener(_onHomeTab);
+    unawaited(prox.resumeIfNeeded(me: mesh.me, blockedIds: mesh.blocked, allowed: billing.premium || kProximityFreeBeta));
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    homeTab.removeListener(_onHomeTab);
     _sub?.cancel();
     super.dispose();
   }
@@ -869,6 +899,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         mesh.start();
       }
     }
+  }
+
+  void _onHomeTab() {
+    if (mounted && _tab != homeTab.value) setState(() => _tab = homeTab.value);
   }
 
   void _onEvent(MeshEvent e) {
@@ -956,13 +990,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ],
           ),
           // const にしないことで、通信状態が変わるたびに各タブを描き直す
-          body: IndexedStack(index: _tab, children: [PeopleTab(), MatchesTab(), PlazaTab(), MeTab()]),
+          body: IndexedStack(index: _tab, children: [PeopleTab(), MatchesTab(), PlazaTab(), ProximityTab(), MeTab()]),
           bottomNavigationBar: Column(mainAxisSize: MainAxisSize.min, children: [
             const AdBanner(),
             NavigationBar(
             selectedIndex: _tab,
             onDestinationSelected: (i) {
+              if (i == 3) Prefs.markProxSeen();
               setState(() => _tab = i);
+              homeTab.value = i;
               AdService.tabChanged();
               if (i == 2) mesh.markPlazaRead();
             },
@@ -981,6 +1017,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ),
                 selectedIcon: const Icon(Icons.forum),
                 label: tr('広場'),
+              ),
+              NavigationDestination(
+                icon: Badge(
+                  isLabelVisible: !Prefs.proxSeen.value,
+                  label: const Text('NEW'),
+                  child: const Icon(Icons.directions_walk),
+                ),
+                selectedIcon: const Icon(Icons.directions_walk),
+                label: tr('すれ違い'),
               ),
               NavigationDestination(icon: const Icon(Icons.person_outline), selectedIcon: const Icon(Icons.person), label: tr('自分')),
             ],
@@ -1036,6 +1081,7 @@ class PeopleTab extends StatelessWidget {
       },
       child: ListView(padding: const EdgeInsets.all(16), children: [
         const _Header('いまここにいる人', '同じWiFiにいるアプリ利用者。共通の趣味が多い順'),
+        const PromoCard(),
         if (mesh.startError != null) _Notice('⚠️ ${mesh.startError}'),
         if (mesh.running && mesh.localIps.isEmpty) const _Notice('📵 WiFiに接続されていないようです。WiFiをオンにしてください。'),
         if (mesh.likedMeCount > 0) _Notice('💌 ${mesh.likedMeCount}人があなたにいいねしています。気になる人にいいねを返すとマッチします。'),
@@ -1540,6 +1586,181 @@ class PlazaTab extends StatelessWidget {
         },
       ),
     ]);
+  }
+}
+
+// ======================= すれ違い通信 =======================
+
+/// 「みんな」タブの上に出す、新機能の宣伝カード（×で消せる。オンにすると出なくなる）
+class PromoCard extends StatelessWidget {
+  const PromoCard({super.key});
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+        listenable: Listenable.merge([prox, Prefs.promoHidden]),
+        builder: (context, _) {
+          if (Prefs.promoHidden.value || prox.enabled) return const SizedBox.shrink();
+          return Container(
+            margin: const EdgeInsets.only(bottom: 14),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(gradient: _brandGradient, borderRadius: BorderRadius.circular(22)),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                const Expanded(
+                  child: Text('🚶 新機能：すれ違い通信', style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w800)),
+                ),
+                IconButton(
+                  onPressed: Prefs.hidePromo,
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  visualDensity: VisualDensity.compact,
+                ),
+              ]),
+              const Text('WiFiがなくても、Bluetoothで近くの人とすれ違ったら通知。最初はオフです。', style: TextStyle(color: Colors.white)),
+              const SizedBox(height: 10),
+              FilledButton(
+                onPressed: () => homeTab.value = 3,
+                style: FilledButton.styleFrom(backgroundColor: Colors.white, foregroundColor: _coral),
+                child: const Text('くわしく見る'),
+              ),
+            ]),
+          );
+        },
+      );
+}
+
+Future<void> reportEncounter(Encounter e) async {
+  final nav = navKey.currentContext;
+  if (nav == null) return;
+  final ok = await showDialog<bool>(
+    context: nav,
+    builder: (ctx) => AlertDialog(
+      title: Text('${e.name} さんを通報'),
+      content: const Text('この人を通報して、今後は表示しません。通報の内容がコピーされます。'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('キャンセル')),
+        FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('通報して非表示')),
+      ],
+    ),
+  );
+  if (ok != true) return;
+  final at = DateTime.fromMillisecondsSinceEpoch(e.at).toIso8601String();
+  await Clipboard.setData(ClipboardData(text: 'WiFi Match 通報(すれ違い)\n相手: ${e.name}\n日時: $at'));
+  await prox.blockEncounter(e);
+  toast('通報して、非表示にしました');
+}
+
+class ProximityTab extends StatelessWidget {
+  const ProximityTab({super.key});
+
+  bool get _allowed => billing.premium || kProximityFreeBeta;
+
+  Future<void> _toggle(bool v) async {
+    if (!v) {
+      await prox.turnOff();
+      toast('すれ違い通信をオフにしました');
+      return;
+    }
+    final me = mesh.me;
+    if (me == null) {
+      toast('プロフィールを先に作ってください');
+      return;
+    }
+    if (!_allowed) {
+      toast('プレミアムが必要です（下の購入ボタンから）');
+      return;
+    }
+    final r = await prox.turnOn(me, mesh.blocked);
+    if (r == 'started') {
+      toast('すれ違い通信をオンにしました');
+    } else if (r == 'bt_off') {
+      toast('Bluetoothをオンにしてください');
+    } else if (r == 'unsupported') {
+      toast('この端末は、Bluetooth LE に対応していません');
+    } else {
+      toast('Bluetoothの許可が必要です');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: Listenable.merge([prox, billing, mesh]),
+      builder: (context, _) {
+        final shown = prox.encounters.where((e) => !prox.isBlocked(e)).toList();
+        final hint = Theme.of(context).hintColor;
+        return RefreshIndicator(
+          onRefresh: prox.refresh,
+          child: ListView(padding: const EdgeInsets.all(16), children: [
+            const _Header('すれ違い通信', 'Bluetoothで、WiFiがなくても、近くの人とすれ違ったらお知らせ'),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const Text('🚶 すれ違い通信', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 8),
+                  const Text('・すれ違った人を、通知と一覧でお知らせ'),
+                  const Text('・WiFiがなくても動きます（Bluetooth）'),
+                  const Text('・オフで始まり、いつでも切れます'),
+                  const Text('・ブロックした人には、表示されません'),
+                ]),
+              ),
+            ),
+            if (!prox.supported) const _Notice('この端末は、Bluetooth LE に対応していません'),
+            if (kProximityFreeBeta) const _Notice('ベータ版：いまは無料で試せます'),
+            SwitchListTile(
+              value: prox.enabled,
+              onChanged: prox.supported ? _toggle : null,
+              contentPadding: EdgeInsets.zero,
+              title: const Text('すれ違い通信'),
+              subtitle: const Text('オンにすると、アプリを閉じていても、近くの人を探します（電池を使います）'),
+            ),
+            if (!_allowed)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    const Text('プレミアムプラン（月額）', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 4),
+                    const Text('すれ違い通信が使えるようになります'),
+                    const SizedBox(height: 6),
+                    billing.product == null ? const Text('現在、準備中です') : Text('月額 ${billing.product!.price}'),
+                    const SizedBox(height: 8),
+                    Row(children: [
+                      FilledButton(
+                        onPressed: billing.product == null || billing.busy ? null : billing.buy,
+                        child: const Text('購入する'),
+                      ),
+                      const SizedBox(width: 8),
+                      TextButton(onPressed: billing.restore, child: const Text('購入を復元')),
+                    ]),
+                  ]),
+                ),
+              ),
+            Text(
+              'あなたのニックネームとアイコンが、Bluetoothで近くの端末に発信されます。発信する識別番号は毎日変わります。つきまといを防ぐため、初期設定はオフです。',
+              style: TextStyle(fontSize: 12.5, color: hint),
+            ),
+            const SizedBox(height: 16),
+            const Text('すれ違った人', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 8),
+            if (shown.isEmpty) const EmptyState('🚶', 'まだ誰ともすれ違っていません。\nオンにして、外に出かけてみよう。'),
+            for (final e in shown)
+              Card(
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  leading: Avatar(e.emoji, online: false, size: 48),
+                  title: Text(e.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  subtitle: Text('${hhmm(e.at)} にすれ違い'),
+                  trailing: TextButton(
+                    onPressed: () => reportEncounter(e),
+                    child: Text('通報', style: TextStyle(color: hint)),
+                  ),
+                ),
+              ),
+          ]),
+        );
+      },
+    );
   }
 }
 
