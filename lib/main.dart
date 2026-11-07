@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'mesh.dart';
 
@@ -26,6 +27,7 @@ const _brandGradient = LinearGradient(colors: [_coral, _orange], begin: Alignmen
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await mesh.load();
+  await Prefs.load();
   if (mesh.me != null) unawaited(mesh.start());
   runApp(const WifiMatchApp());
 }
@@ -247,18 +249,162 @@ class _AppGate extends StatefulWidget {
 
 class _AppGateState extends State<_AppGate> {
   bool _done = false;
+  bool _introSeen = Prefs.introSeen;
 
   @override
   Widget build(BuildContext context) {
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 450),
-      child: _done
+      child: _done && !_introSeen
+          ? IntroScreen(
+              key: const ValueKey('intro'),
+              onDone: () {
+                Prefs.markIntroSeen();
+                setState(() => _introSeen = true);
+              },
+            )
+          : _done
           ? ListenableBuilder(
               key: const ValueKey('app'),
               listenable: mesh,
               builder: (context, _) => mesh.me == null ? const OnboardingScreen() : const HomeScreen(),
             )
           : SplashScreen(key: const ValueKey('splash'), onDone: () => setState(() => _done = true)),
+    );
+  }
+}
+
+/// 端末に保存する小さな設定（最初の説明を見たか、通知のオン・オフ）
+class Prefs {
+  static bool introSeen = false;
+
+  static Future<void> load() async {
+    try {
+      final p = await SharedPreferences.getInstance();
+      introSeen = p.getBool('wm_intro_seen') ?? false;
+      Notifier.on.value = p.getBool('wm_notify') ?? true;
+    } catch (_) {}
+  }
+
+  static Future<void> markIntroSeen() async {
+    introSeen = true;
+    try {
+      await (await SharedPreferences.getInstance()).setBool('wm_intro_seen', true);
+    } catch (_) {}
+  }
+}
+
+/// メッセージなどが届いたときの通知（端末の中だけで出す。アプリを閉じている間のみ）
+class Notifier {
+  static const _ch = MethodChannel('wifimatch/net');
+  static final ValueNotifier<bool> on = ValueNotifier<bool>(true);
+
+  static Future<void> setEnabled(bool v) async {
+    on.value = v;
+    try {
+      await (await SharedPreferences.getInstance()).setBool('wm_notify', v);
+    } catch (_) {}
+    if (v) await requestPermission();
+  }
+
+  static Future<void> requestPermission() async {
+    try {
+      await _ch.invokeMethod<void>('requestNotifPermission');
+    } catch (_) {}
+  }
+
+  static Future<void> show(String title, String body) async {
+    if (!on.value) return;
+    try {
+      await _ch.invokeMethod<void>('notify', {'title': title, 'body': body});
+    } catch (_) {}
+  }
+}
+
+/// 最初に1回だけ出す、アプリの簡単な説明
+class IntroScreen extends StatefulWidget {
+  const IntroScreen({super.key, required this.onDone});
+  final VoidCallback onDone;
+
+  @override
+  State<IntroScreen> createState() => _IntroScreenState();
+}
+
+class _IntroScreenState extends State<IntroScreen> {
+  final _pc = PageController();
+  int _i = 0;
+
+  static const _pages = [
+    ('📡', '同じWiFiの人が見つかる', 'アプリを入れた人どうしが、同じWiFiにいるときだけ、お互いを見つけられます。共通の趣味が多い人から順に表示されます。'),
+    ('💞', 'いいねして、マッチ', 'お互いにいいねすると「マッチ」。マッチした人とだけ、1対1でチャットや写真を送り合えます。広場では、みんなと話せます。'),
+    ('🛡️', '安心して使うために', 'サーバーは使わず、データはあなたのスマホの中だけ。不快な相手は、通報・ブロックできます。18歳以上の方のみご利用いただけます。'),
+  ];
+
+  @override
+  void dispose() {
+    _pc.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final last = _i == _pages.length - 1;
+    return Scaffold(
+      body: SafeArea(
+        child: Column(children: [
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(onPressed: widget.onDone, child: const Text('スキップ')),
+          ),
+          Expanded(
+            child: PageView(
+              controller: _pc,
+              onPageChanged: (i) => setState(() => _i = i),
+              children: [
+                for (final (emoji, title, body) in _pages)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                      Text(emoji, style: const TextStyle(fontSize: 88)),
+                      const SizedBox(height: 24),
+                      Text(title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
+                      const SizedBox(height: 12),
+                      Text(body,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 16, height: 1.6, color: Theme.of(context).hintColor)),
+                    ]),
+                  ),
+              ],
+            ),
+          ),
+          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            for (var k = 0; k < _pages.length; k++)
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                margin: const EdgeInsets.all(4),
+                width: k == _i ? 22 : 8,
+                height: 8,
+                decoration: BoxDecoration(color: k == _i ? _coral : const Color(0xFFE6D8D0), borderRadius: BorderRadius.circular(99)),
+              ),
+          ]),
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () {
+                  if (last) {
+                    widget.onDone();
+                  } else {
+                    _pc.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+                  }
+                },
+                child: Text(last ? 'はじめる' : '次へ', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+              ),
+            ),
+          ),
+        ]),
+      ),
     );
   }
 }
@@ -686,6 +832,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int _tab = 0;
+  bool _bg = false; // アプリが裏に回っている間は、通知で知らせる
   StreamSubscription<MeshEvent>? _sub;
 
   @override
@@ -694,6 +841,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _sub = mesh.events.listen(_onEvent);
     unawaited(AdService.start());
+    if (Notifier.on.value) unawaited(Notifier.requestPermission());
   }
 
   @override
@@ -705,6 +853,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    _bg = state == AppLifecycleState.paused;
     if (state == AppLifecycleState.resumed) {
       if (mesh.running) {
         mesh.announce();
@@ -718,10 +867,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     switch (e.type) {
       case MeshEventType.match:
         if (e.who != null) _showMatch(e.who!);
+        if (_bg) Notifier.show('💞 マッチしました', '${e.who?.name ?? '誰か'} さんとお互いにいいねしました');
       case MeshEventType.liked:
         toast('💌 誰かがあなたにいいねしました');
+        if (_bg) Notifier.show('💌 いいねが届きました', '誰かがあなたにいいねしました');
       case MeshEventType.dm:
         if (ChatScreen.openWith != e.who?.id) toast('💬 ${e.who?.name ?? '誰か'} さんからメッセージ');
+        if (_bg) Notifier.show('💬 ${e.who?.name ?? '誰か'} さんからメッセージ', e.text ?? '');
       case MeshEventType.plaza:
         break;
     }
@@ -1396,6 +1548,16 @@ class MeTab extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           child: ProfileForm(key: ValueKey(mesh.me?.id), initial: mesh.me, submitLabel: '保存する'),
+        ),
+      ),
+      ValueListenableBuilder<bool>(
+        valueListenable: Notifier.on,
+        builder: (context, v, child) => SwitchListTile(
+          value: v,
+          onChanged: Notifier.setEnabled,
+          contentPadding: EdgeInsets.zero,
+          title: const Text('メッセージの通知'),
+          subtitle: const Text('アプリを閉じている間に、メッセージやマッチをお知らせします'),
         ),
       ),
       const SizedBox(height: 8),
