@@ -7,8 +7,8 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// true の間は、ふれあいレーダーを無料で使える（GitHub で配る、ベータ版のAPK用）。
-/// Google Play に出す版では false にする。
-const bool kProximityFreeBeta = true;
+/// Google Play に出す版（AAB）は、ビルド時に PROXIMITY_FREE_BETA=false を渡して、課金を有効にする。
+const bool kProximityFreeBeta = bool.fromEnvironment('PROXIMITY_FREE_BETA', defaultValue: true);
 
 /// Play Console で作る、定期購入の「商品ID」（月額と年額）
 const String kProductMonthly = 'wifimatch_proximity_monthly';
