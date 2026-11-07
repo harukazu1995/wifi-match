@@ -106,8 +106,11 @@ class WifiMatchApp extends StatelessWidget {
     return MaterialApp(
       title: 'WiFi Match',
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
-      supportedLocales: const [Locale('ja'), Locale('en')],
-      localeResolutionCallback: (locale, supported) => Locale(locale?.languageCode == 'ja' ? 'ja' : 'en'),
+      supportedLocales: const [Locale('ja'), Locale('en'), Locale('ko'), Locale('zh')],
+      localeResolutionCallback: (locale, supported) {
+        final code = locale?.languageCode;
+        return Locale(code == 'ja' || code == 'ko' || code == 'zh' ? code! : 'en');
+      },
       debugShowCheckedModeBanner: false,
       navigatorKey: navKey,
       scaffoldMessengerKey: messengerKey,
