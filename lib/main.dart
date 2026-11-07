@@ -2,12 +2,14 @@ import 'dart:async';
 import 'dart:io' show File;
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide SelectableText, Text;
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'i18n.dart';
 import 'mesh.dart';
 
 final mesh = MeshService();
@@ -103,6 +105,9 @@ class WifiMatchApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'WiFi Match',
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      supportedLocales: const [Locale('ja'), Locale('en')],
+      localeResolutionCallback: (locale, supported) => Locale(locale?.languageCode == 'ja' ? 'ja' : 'en'),
       debugShowCheckedModeBanner: false,
       navigatorKey: navKey,
       scaffoldMessengerKey: messengerKey,
@@ -316,7 +321,7 @@ class Notifier {
   static Future<void> show(String title, String body) async {
     if (!on.value) return;
     try {
-      await _ch.invokeMethod<void>('notify', {'title': title, 'body': body});
+      await _ch.invokeMethod<void>('notify', {'title': tr(title), 'body': tr(body)});
     } catch (_) {}
   }
 }
@@ -715,8 +720,8 @@ class _ProfileFormState extends State<ProfileForm> {
   Widget _label(String t, [String? hint]) => Padding(
         padding: const EdgeInsets.only(top: 18, bottom: 6),
         child: Text.rich(TextSpan(children: [
-          TextSpan(text: t, style: const TextStyle(fontWeight: FontWeight.w700)),
-          if (hint != null) TextSpan(text: '  $hint', style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor)),
+          TextSpan(text: tr(t), style: const TextStyle(fontWeight: FontWeight.w700)),
+          if (hint != null) TextSpan(text: '  ${tr(hint)}', style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor)),
         ])),
       );
 
@@ -755,17 +760,17 @@ class _ProfileFormState extends State<ProfileForm> {
         controller: _bio,
         maxLength: 160,
         maxLines: 3,
-        decoration: const InputDecoration(hintText: '例：窓際の席で作業してます。コーヒー好きな人と話したい', counterText: ''),
+        decoration: InputDecoration(hintText: tr('例：窓際の席で作業してます。コーヒー好きな人と話したい'), counterText: ''),
       ),
       _label('趣味・興味', 'スペース区切りで最大8個'),
       TextField(
         controller: _tags,
         onChanged: (_) => setState(() {}),
-        decoration: const InputDecoration(hintText: 'カフェ 映画 ゲーム'),
+        decoration: InputDecoration(hintText: tr('カフェ 映画 ゲーム')),
       ),
       const SizedBox(height: 8),
       Wrap(spacing: 6, runSpacing: 6, children: [
-        for (final s in _suggest)
+        for (final s in _suggest.map(tr))
           FilterChip(
             label: Text(s),
             selected: current.contains(s),
@@ -959,11 +964,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               if (i == 2) mesh.markPlazaRead();
             },
             destinations: [
-              const NavigationDestination(icon: Icon(Icons.people_outline), selectedIcon: Icon(Icons.people), label: 'みんな'),
+              NavigationDestination(icon: const Icon(Icons.people_outline), selectedIcon: const Icon(Icons.people), label: tr('みんな')),
               NavigationDestination(
                 icon: Badge(isLabelVisible: mesh.unreadTotal > 0, label: Text('${mesh.unreadTotal}'), child: const Icon(Icons.favorite_border)),
                 selectedIcon: const Icon(Icons.favorite),
-                label: 'マッチ',
+                label: tr('マッチ'),
               ),
               NavigationDestination(
                 icon: Badge(
@@ -972,9 +977,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   child: const Icon(Icons.forum_outlined),
                 ),
                 selectedIcon: const Icon(Icons.forum),
-                label: '広場',
+                label: tr('広場'),
               ),
-              const NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: '自分'),
+              NavigationDestination(icon: const Icon(Icons.person_outline), selectedIcon: const Icon(Icons.person), label: tr('自分')),
             ],
           ),
           ]),
@@ -1305,7 +1310,7 @@ class _ComposerState extends State<Composer> {
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
           child: Row(children: [
             if (widget.onPhoto != null)
-              IconButton(onPressed: _busy ? null : _photo, icon: const Icon(Icons.photo_outlined), tooltip: '写真を送る'),
+              IconButton(onPressed: _busy ? null : _photo, icon: const Icon(Icons.photo_outlined), tooltip: tr('写真を送る')),
             Expanded(
               child: TextField(
                 controller: _c,
@@ -1313,7 +1318,7 @@ class _ComposerState extends State<Composer> {
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => _send(),
                 decoration: InputDecoration(
-                  hintText: widget.hint,
+                  hintText: tr(widget.hint),
                   counterText: '',
                   contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(99), borderSide: BorderSide.none),
