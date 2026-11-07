@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:io' show File;
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'mesh.dart';
 
@@ -279,9 +281,63 @@ String hhmm(int ms) {
 const bool kUseTestAds = false;
 const String _bannerUnitTest = 'ca-app-pub-3940256099942544/6300978111';
 const String _bannerUnitProd = 'ca-app-pub-6787171058926480/5616465700';
+const String _interstitialUnitTest = 'ca-app-pub-3940256099942544/1033173712';
+const String _interstitialUnitProd = 'ca-app-pub-6787171058926480/3264743884';
 
 class AdService {
   static bool _started = false;
+  static InterstitialAd? _inter;
+  static bool _interLoading = false;
+  static DateTime _lastInter = DateTime.now();
+  static int _breaks = 0;
+
+  static void _loadInterstitial() {
+    if (_inter != null || _interLoading || !ready.value) return;
+    _interLoading = true;
+    InterstitialAd.load(
+      adUnitId: kUseTestAds ? _interstitialUnitTest : _interstitialUnitProd,
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) {
+          _inter = ad;
+          _interLoading = false;
+        },
+        onAdFailedToLoad: (error) {
+          _interLoading = false;
+        },
+      ),
+    );
+  }
+
+  /// 画面の切り替わりなど、自然な区切りで全画面広告を出す。出しすぎないよう、3分に1回まで。
+  static void maybeShowInterstitial() {
+    if (!ready.value) return;
+    final ad = _inter;
+    if (ad == null) {
+      _loadInterstitial();
+      return;
+    }
+    if (DateTime.now().difference(_lastInter) < const Duration(minutes: 3)) return;
+    _inter = null;
+    _lastInter = DateTime.now();
+    ad.fullScreenContentCallback = FullScreenContentCallback(
+      onAdDismissedFullScreenContent: (a) {
+        a.dispose();
+        _loadInterstitial();
+      },
+      onAdFailedToShowFullScreenContent: (a, e) {
+        a.dispose();
+        _loadInterstitial();
+      },
+    );
+    ad.show();
+  }
+
+  /// タブを切り替えたときに数える。6回に1回、広告を出してよいか確かめる。
+  static void tabChanged() {
+    _breaks++;
+    if (_breaks % 6 == 0) maybeShowInterstitial();
+  }
 
   /// 広告を出してよい状態になったら true
   static final ValueNotifier<bool> ready = ValueNotifier<bool>(false);
@@ -312,6 +368,7 @@ class AdService {
         ));
         await MobileAds.instance.initialize();
         ready.value = true;
+        _loadInterstitial();
       }
     } catch (_) {
       // 広告の準備に失敗しても、アプリ本体は普通に使える
@@ -746,6 +803,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             selectedIndex: _tab,
             onDestinationSelected: (i) {
               setState(() => _tab = i);
+              AdService.tabChanged();
               if (i == 2) mesh.markPlazaRead();
             },
             destinations: [
@@ -1000,7 +1058,7 @@ class Bubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final mine = m.from == mesh.me?.id;
-    final who = (!mine && showWho) ? mesh.profileOf(m.from) : null;
+    final who = !mine ? mesh.profileOf(m.from) : null;
     final cs = Theme.of(context).colorScheme;
     final bubble = Container(
       constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.68),
@@ -1016,7 +1074,7 @@ class Bubble extends StatelessWidget {
           bottomRight: Radius.circular(mine ? 6 : 18),
         ),
       ),
-      child: Text(m.text, style: TextStyle(color: mine ? Colors.white : null)),
+      child: m.img != null ? PhotoTile(m, mine: mine) : Text(m.text, style: TextStyle(color: mine ? Colors.white : null)),
     );
     final time = Text(hhmm(m.at), style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor));
     return Padding(
@@ -1043,9 +1101,10 @@ class Bubble extends StatelessWidget {
 }
 
 class Composer extends StatefulWidget {
-  const Composer({super.key, required this.hint, required this.onSend});
+  const Composer({super.key, required this.hint, required this.onSend, this.onPhoto});
   final String hint;
   final Future<void> Function(String text) onSend;
+  final Future<void> Function()? onPhoto;
 
   @override
   State<Composer> createState() => _ComposerState();
@@ -1054,6 +1113,18 @@ class Composer extends StatefulWidget {
 class _ComposerState extends State<Composer> {
   final _c = TextEditingController();
   bool _busy = false;
+
+  Future<void> _photo() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await widget.onPhoto?.call();
+    } catch (e) {
+      toast(e.toString());
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
 
   Future<void> _send() async {
     final t = _c.text.trim();
@@ -1081,6 +1152,8 @@ class _ComposerState extends State<Composer> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
           child: Row(children: [
+            if (widget.onPhoto != null)
+              IconButton(onPressed: _busy ? null : _photo, icon: const Icon(Icons.photo_outlined), tooltip: '写真を送る'),
             Expanded(
               child: TextField(
                 controller: _c,
@@ -1102,6 +1175,85 @@ class _ComposerState extends State<Composer> {
       );
 }
 
+class PhotoTile extends StatefulWidget {
+  const PhotoTile(this.m, {super.key, required this.mine});
+  final ChatMessage m;
+  final bool mine;
+
+  @override
+  State<PhotoTile> createState() => _PhotoTileState();
+}
+
+class _PhotoTileState extends State<PhotoTile> {
+  late bool _shown = widget.mine; // 届いた写真は、タップするまで表示しない
+
+  void _open(File f) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => Dialog.fullscreen(
+        backgroundColor: Colors.black,
+        child: Stack(children: [
+          Positioned.fill(child: InteractiveViewer(child: Image.file(f, fit: BoxFit.contain))),
+          Positioned(
+            top: 8,
+            right: 8,
+            child: IconButton(onPressed: () => Navigator.pop(ctx), icon: const Icon(Icons.close, color: Colors.white)),
+          ),
+        ]),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final f = mesh.imgFile(widget.m);
+    if (f == null || !f.existsSync()) {
+      return Text('（写真を表示できません）', style: TextStyle(color: widget.mine ? Colors.white : null));
+    }
+    if (!_shown) {
+      return InkWell(
+        onTap: () => setState(() => _shown = true),
+        child: Container(
+          width: 190,
+          height: 110,
+          alignment: Alignment.center,
+          color: const Color(0xFFF1E9E4),
+          child: const Text('📷 写真が届きました\nタップで表示', textAlign: TextAlign.center),
+        ),
+      );
+    }
+    return GestureDetector(
+      onTap: () => _open(f),
+      child: ClipRRect(borderRadius: BorderRadius.circular(10), child: Image.file(f, width: 200, fit: BoxFit.cover, cacheWidth: 600)),
+    );
+  }
+}
+
+Future<void> pickAndSendPhoto(Profile p) async {
+  final x = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 1024, maxHeight: 1024, imageQuality: 70);
+  if (x == null) return;
+  final bytes = await x.readAsBytes();
+  final nav = navKey.currentContext;
+  if (nav == null || !nav.mounted) return;
+  final ok = await showDialog<bool>(
+    context: nav,
+    builder: (ctx) => AlertDialog(
+      title: Text('${p.name} さんに写真を送る'),
+      content: Column(mainAxisSize: MainAxisSize.min, children: [
+        ClipRRect(borderRadius: BorderRadius.circular(10), child: Image.memory(bytes, height: 220, fit: BoxFit.contain)),
+        const SizedBox(height: 10),
+        const Text('不適切な写真は禁止です。相手が通報すると、ブロックされます。', style: TextStyle(fontSize: 12)),
+      ]),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('キャンセル')),
+        FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('送る')),
+      ],
+    ),
+  );
+  if (ok != true) return;
+  await mesh.sendImage(p.id, bytes);
+}
+
 // ======================= 1対1チャット =======================
 
 class ChatScreen extends StatefulWidget {
@@ -1111,7 +1263,7 @@ class ChatScreen extends StatefulWidget {
   static String? openWith;
 
   static void open(String id) {
-    navKey.currentState?.push(MaterialPageRoute<void>(builder: (_) => ChatScreen(peerId: id)));
+    navKey.currentState?.push(MaterialPageRoute<void>(builder: (_) => ChatScreen(peerId: id))).then((_) => AdService.maybeShowInterstitial());
   }
 
   @override
@@ -1185,7 +1337,11 @@ class _ChatScreenState extends State<ChatScreen> {
                       itemBuilder: (_, i) => Bubble(msgs[i]),
                     ),
             ),
-            Composer(hint: online ? 'メッセージ…' : '相手がオフラインです', onSend: (t) => mesh.sendDm(p.id, t)),
+            Composer(
+              hint: online ? 'メッセージ…' : '相手がオフラインです',
+              onSend: (t) => mesh.sendDm(p.id, t),
+              onPhoto: online ? () => pickAndSendPhoto(p) : null,
+            ),
           ]),
         );
       },
