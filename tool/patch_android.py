@@ -74,12 +74,22 @@ for old in kt_dir.glob("MainActivity.*"):
 shutil.copy(root / "tool/MainActivity.kt", kt_dir / "MainActivity.kt")
 shutil.copy(root / "tool/ProximityService.kt", kt_dir / "ProximityService.kt")
 
-# アプリのアイコンを差し替え
+# アプリのアイコンを差し替え（tool/icon_b64.txt があれば、それを全サイズに使う。なければ assets/icon の画像）
+icon_png = None
+icon_b64 = root / "tool/icon_b64.txt"
+if icon_b64.exists():
+    import base64
+    icon_png = base64.b64decode(icon_b64.read_text(encoding="utf-8").strip())
 for density in ["mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"]:
-    src = root / f"assets/icon/ic_launcher_{density}.png"
     dst = root / f"android/app/src/main/res/mipmap-{density}/ic_launcher.png"
-    if src.exists() and dst.parent.is_dir():
-        shutil.copy(src, dst)
+    if not dst.parent.is_dir():
+        continue
+    if icon_png is not None:
+        dst.write_bytes(icon_png)
+    else:
+        src = root / f"assets/icon/ic_launcher_{density}.png"
+        if src.exists():
+            shutil.copy(src, dst)
 
 # 広告ライブラリが使う WorkManager が、コード圧縮（R8）で壊れて起動時に落ちるため、圧縮を無効にする
 minify_done = False
