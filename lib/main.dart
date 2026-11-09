@@ -132,7 +132,7 @@ class WifiMatchApp extends StatelessWidget {
 
 // ======================= 起動アニメーション =======================
 
-/// WiFiの電波と、ハートを組み合わせたロゴ。progress(0〜1)で描かれていく。
+/// アプリのロゴ（ガラスの吹き出しとWiFi）。progress(0〜1)で、電波が内側から描かれていく。
 class WifiLogo extends StatelessWidget {
   const WifiLogo({super.key, this.progress = 1, this.size = 120});
   final double progress;
@@ -140,54 +140,127 @@ class WifiLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final heart = Curves.elasticOut.transform((progress / 0.45).clamp(0.0, 1.0));
     return SizedBox(
       width: size,
       height: size,
-      child: Stack(alignment: Alignment.center, children: [
-        CustomPaint(size: Size.square(size), painter: _ArcsPainter(progress)),
-        Align(
-          alignment: const Alignment(0, 0.56),
-          child: Transform.scale(
-            scale: heart,
-            child: ShaderMask(
-              shaderCallback: (r) => _brandGradient.createShader(r),
-              child: Icon(Icons.favorite, size: size * 0.26, color: Colors.white),
-            ),
-          ),
-        ),
-      ]),
+      child: CustomPaint(painter: _LogoPainter(progress)),
     );
   }
 }
 
-class _ArcsPainter extends CustomPainter {
-  _ArcsPainter(this.progress);
+class _LogoPainter extends CustomPainter {
+  _LogoPainter(this.progress);
   final double progress;
+
+  Path _bubble() {
+    const x = 150.0, y = 210.0, w = 724.0, h = 520.0, r = 200.0;
+    return Path()
+      ..arcTo(Rect.fromLTWH(x, y, 2 * r, 2 * r), math.pi, math.pi / 2, false)
+      ..arcTo(Rect.fromLTWH(x + w - 2 * r, y, 2 * r, 2 * r), -math.pi / 2, math.pi / 2, false)
+      ..arcTo(Rect.fromLTWH(x + w - 2 * r, y + h - 2 * r, 2 * r, 2 * r), 0, math.pi / 2, false)
+      ..lineTo(x + r + 100, y + h)
+      ..lineTo(260, 880)
+      ..lineTo(x + r - 30, y + h)
+      ..arcTo(Rect.fromLTWH(x, y + h - 2 * r, 2 * r, 2 * r), math.pi / 2, math.pi / 2, false)
+      ..close();
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final center = Offset(w / 2, size.height * 0.78);
+    canvas.scale(size.width / 1024);
+    const full = Rect.fromLTWH(0, 0, 1024, 1024);
+    canvas.save();
+    canvas.clipRRect(RRect.fromRectAndRadius(full, const Radius.circular(230)));
+    canvas.drawRect(
+      full,
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFFFF3D6B), Color(0xFF5B3DFF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ).createShader(full),
+    );
+    void glow(Offset c, double r, Color col) {
+      canvas.drawRect(
+        full,
+        Paint()
+          ..shader = RadialGradient(colors: [col, col.withValues(alpha: 0)])
+              .createShader(Rect.fromCircle(center: c, radius: r)),
+      );
+    }
+
+    glow(const Offset(200, 180), 560, const Color(0xC8FFB347));
+    glow(const Offset(860, 900), 560, const Color(0xBE29D6FF));
+    glow(const Offset(800, 150), 380, const Color(0x78FF6AD5));
+    canvas.restore();
+
+    final bubble = _bubble();
+    canvas.drawPath(
+      bubble.shift(const Offset(0, 24)),
+      Paint()
+        ..color = const Color(0x402A0F5E)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, 22),
+    );
+    const bb = Rect.fromLTWH(150, 210, 724, 670);
+    canvas.drawPath(
+      bubble,
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0x96FFFFFF), Color(0x32FFFFFF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ).createShader(bb),
+    );
+    canvas.drawPath(
+      bubble,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 6
+        ..strokeJoin = StrokeJoin.round
+        ..shader = const LinearGradient(
+          colors: [Color(0xE6FFFFFF), Color(0x28FFFFFF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ).createShader(bb),
+    );
+
+    const center = Offset(512, 520);
+    const radii = [70.0, 135.0, 200.0];
+    final dot = Curves.easeOutBack.transform(((progress - 0.1) / 0.3).clamp(0.0, 1.0));
+    canvas.drawCircle(center, 38 * dot, Paint()..color = Colors.white);
     for (var i = 0; i < 3; i++) {
       // 内側から順に、ふわっと現れる
       final a = ((progress - 0.3 - i * 0.14) / 0.22).clamp(0.0, 1.0);
       if (a <= 0) continue;
-      final r = w * (0.31 + 0.145 * i);
-      final rect = Rect.fromCircle(center: center, radius: r);
-      final paint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round
-        ..strokeWidth = w * 0.055
-        ..shader = LinearGradient(
-          colors: [_coral.withValues(alpha: a), _orange.withValues(alpha: a)],
-        ).createShader(Rect.fromLTWH(0, 0, w, size.height));
-      canvas.drawArc(rect, -math.pi * 3 / 4, math.pi / 2, false, paint);
+      final rect = Rect.fromCircle(center: center, radius: radii[i]);
+      canvas.drawArc(
+        rect.shift(const Offset(0, 10)),
+        -math.pi * 3 / 4,
+        math.pi / 2,
+        false,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round
+          ..strokeWidth = 44
+          ..color = const Color(0x55D02A4E).withValues(alpha: 0.33 * a)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 8),
+      );
+      canvas.drawArc(
+        rect,
+        -math.pi * 3 / 4,
+        math.pi / 2,
+        false,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round
+          ..strokeWidth = 44
+          ..color = Colors.white.withValues(alpha: a),
+      );
     }
   }
 
   @override
-  bool shouldRepaint(_ArcsPainter old) => old.progress != progress;
+  bool shouldRepaint(_LogoPainter old) => old.progress != progress;
 }
 
 class SplashScreen extends StatefulWidget {
