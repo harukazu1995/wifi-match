@@ -31,11 +31,10 @@ class _RadarScopeState extends State<RadarScope> with SingleTickerProviderStateM
     for (final u in seed.codeUnits) {
       h = (h * 31 + u) & 0xFFFFFF;
     }
-    final a = (h % 360) * math.pi / 180 + i * 1.7;
-    final r = 0.34 + (h % 50) / 100 * 0.9;
-    return Offset(math.cos(a) * r.clamp(0.34, 0.8), math.sin(a) * r.clamp(0.34, 0.8));
+    final a = i * 2.4 + (h % 100) / 100;
+    final r = 0.40 + ((i * 37 + h) % 40) / 100;
+    return Offset(math.cos(a) * r, math.sin(a) * r);
   }
-
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
