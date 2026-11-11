@@ -30,12 +30,15 @@ final homeTab = ValueNotifier<int>(0);
 const kPrivacyUrl = 'https://github.com/harukazu1995/wifi-match/blob/main/PRIVACY.md';
 const kContactUrl = 'https://github.com/harukazu1995/wifi-match/issues';
 
-const _coral = Color(0xFFFF4D6D);
-const _orange = Color(0xFFFF8A4C);
-const _ink = Color(0xFF2B2430);
-const _bg = Color(0xFFFFF8F3);
-const _sharedColor = Color(0xFFFFE9A8);
-const _brandGradient = LinearGradient(colors: [_coral, _orange], begin: Alignment.topLeft, end: Alignment.bottomRight);
+const _coral = Color(0xFFBFA77A); // シャンパン色（アクセント）
+const _orange = Color(0xFFD8C7A4);
+const _ink = Color(0xFFECE8E1);
+const _bg = Color(0xFF121212);
+const _card = Color(0xFF1A1A1A);
+const _line = Color(0xFF2A2A2A);
+const _onAccent = Color(0xFF151515);
+const _sharedColor = Color(0xFF2A261D);
+const _brandGradient = LinearGradient(colors: [Color(0xFF8F7A52), Color(0xFF6F5D3E)], begin: Alignment.topLeft, end: Alignment.bottomRight);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,26 +54,34 @@ Future<void> main() async {
 class WifiMatchApp extends StatelessWidget {
   const WifiMatchApp({super.key});
 
-  // 明るい配色に固定（端末のダークモードに引きずられて暗くならないようにする）
+  // 落ち着いた暗い配色に固定（炭のような黒 + くすんだシャンパン色）
   ThemeData _theme() {
-    final scheme = ColorScheme.fromSeed(seedColor: _coral, brightness: Brightness.light, primary: _coral).copyWith(
-      surface: Colors.white,
+    final scheme = ColorScheme.fromSeed(seedColor: _coral, brightness: Brightness.dark, primary: _coral).copyWith(
+      surface: _card,
       onSurface: _ink,
-      primaryContainer: const Color(0xFFFFE3E8),
-      onPrimaryContainer: const Color(0xFF7A1F33),
-      surfaceContainerHighest: const Color(0xFFF6ECE6),
+      primary: _coral,
+      onPrimary: _onAccent,
+      primaryContainer: const Color(0xFF2A261D),
+      onPrimaryContainer: _orange,
+      secondaryContainer: const Color(0xFF2A261D),
+      onSecondaryContainer: _orange,
+      surfaceContainerHighest: const Color(0xFF242424),
+      surfaceContainerHigh: const Color(0xFF202020),
+      surfaceContainer: const Color(0xFF1C1C1C),
+      outline: const Color(0xFF5A5242),
+      outlineVariant: _line,
     );
     return ThemeData(
       useMaterial3: true,
+      brightness: Brightness.dark,
       colorScheme: scheme,
       scaffoldBackgroundColor: _bg,
       cardTheme: CardThemeData(
-        color: Colors.white,
-        elevation: 3,
-        shadowColor: const Color(0x22FF4D6D),
+        color: _card,
+        elevation: 0,
         surfaceTintColor: Colors.transparent,
         margin: const EdgeInsets.only(bottom: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: _line)),
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: _bg,
@@ -80,40 +91,57 @@ class WifiMatchApp extends StatelessWidget {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
+          backgroundColor: _coral,
+          foregroundColor: _onAccent,
           shape: const StadiumBorder(),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         ),
       ),
-      outlinedButtonTheme: OutlinedButtonThemeData(style: OutlinedButton.styleFrom(shape: const StadiumBorder())),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          shape: const StadiumBorder(),
+          foregroundColor: _orange,
+          side: const BorderSide(color: Color(0xFF5A5242)),
+        ),
+      ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: Colors.white,
+        backgroundColor: _bg,
         surfaceTintColor: Colors.transparent,
-        elevation: 12,
-        shadowColor: const Color(0x33FF4D6D),
-        indicatorColor: const Color(0xFFFFE3E8),
+        elevation: 0,
+        indicatorColor: const Color(0xFF2A261D),
         labelTextStyle: WidgetStateProperty.resolveWith(
-          (s) => TextStyle(fontSize: 12, fontWeight: s.contains(WidgetState.selected) ? FontWeight.w800 : FontWeight.w500),
+          (s) => TextStyle(
+            fontSize: 12,
+            fontWeight: s.contains(WidgetState.selected) ? FontWeight.w600 : FontWeight.w400,
+            color: s.contains(WidgetState.selected) ? _orange : const Color(0xFF9A958B),
+          ),
+        ),
+        iconTheme: WidgetStateProperty.resolveWith(
+          (s) => IconThemeData(color: s.contains(WidgetState.selected) ? _orange : const Color(0xFF9A958B)),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFFF0DED5))),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFFF0DED5))),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: _coral, width: 2)),
+        fillColor: _card,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF333333))),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF333333))),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: _coral, width: 1.5)),
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: _ink,
-        contentTextStyle: const TextStyle(color: Colors.white),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        contentTextStyle: const TextStyle(color: _onAccent),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: Colors.white,
+        backgroundColor: _card,
         surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: const BorderSide(color: _line)),
       ),
+      bottomSheetTheme: const BottomSheetThemeData(backgroundColor: _card, surfaceTintColor: Colors.transparent),
     );
   }
+  /// 画面の見た目の確認用（テストから使う）
+  ThemeData get themeForTest => _theme();
 
   @override
   Widget build(BuildContext context) {
@@ -129,7 +157,7 @@ class WifiMatchApp extends StatelessWidget {
       navigatorKey: navKey,
       scaffoldMessengerKey: messengerKey,
       theme: _theme(),
-      themeMode: ThemeMode.light,
+      themeMode: ThemeMode.dark,
       home: const _AppGate(),
     );
   }
@@ -174,96 +202,37 @@ class _LogoPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     canvas.scale(size.width / 1024);
     const full = Rect.fromLTWH(0, 0, 1024, 1024);
-    canvas.save();
-    canvas.clipRRect(RRect.fromRectAndRadius(full, const Radius.circular(230)));
-    canvas.drawRect(
-      full,
-      Paint()
-        ..shader = const LinearGradient(
-          colors: [Color(0xFFFF3D6B), Color(0xFF5B3DFF)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ).createShader(full),
-    );
-    void glow(Offset c, double r, Color col) {
-      canvas.drawRect(
-        full,
-        Paint()
-          ..shader = RadialGradient(colors: [col, col.withValues(alpha: 0)])
-              .createShader(Rect.fromCircle(center: c, radius: r)),
-      );
-    }
-
-    glow(const Offset(200, 180), 560, const Color(0xC8FFB347));
-    glow(const Offset(860, 900), 560, const Color(0xBE29D6FF));
-    glow(const Offset(800, 150), 380, const Color(0x78FF6AD5));
-    canvas.restore();
-
+    canvas.drawRRect(RRect.fromRectAndRadius(full, const Radius.circular(230)), Paint()..color = _card);
     final bubble = _bubble();
-    canvas.drawPath(
-      bubble.shift(const Offset(0, 24)),
-      Paint()
-        ..color = const Color(0x402A0F5E)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, 22),
-    );
-    const bb = Rect.fromLTWH(150, 210, 724, 670);
-    canvas.drawPath(
-      bubble,
-      Paint()
-        ..shader = const LinearGradient(
-          colors: [Color(0x96FFFFFF), Color(0x32FFFFFF)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ).createShader(bb),
-    );
     canvas.drawPath(
       bubble,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 6
+        ..strokeWidth = 22
         ..strokeJoin = StrokeJoin.round
-        ..shader = const LinearGradient(
-          colors: [Color(0xE6FFFFFF), Color(0x28FFFFFF)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ).createShader(bb),
+        ..color = _coral,
     );
-
     const center = Offset(512, 520);
     const radii = [70.0, 135.0, 200.0];
     final dot = Curves.easeOutBack.transform(((progress - 0.1) / 0.3).clamp(0.0, 1.0));
-    canvas.drawCircle(center, 38 * dot, Paint()..color = Colors.white);
+    canvas.drawCircle(center, 38 * dot, Paint()..color = _coral);
     for (var i = 0; i < 3; i++) {
-      // 内側から順に、ふわっと現れる
+      // 内側から順に、静かに現れる
       final a = ((progress - 0.3 - i * 0.14) / 0.22).clamp(0.0, 1.0);
       if (a <= 0) continue;
-      final rect = Rect.fromCircle(center: center, radius: radii[i]);
       canvas.drawArc(
-        rect.shift(const Offset(0, 10)),
+        Rect.fromCircle(center: center, radius: radii[i]),
         -math.pi * 3 / 4,
         math.pi / 2,
         false,
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeCap = StrokeCap.round
-          ..strokeWidth = 44
-          ..color = const Color(0x55D02A4E).withValues(alpha: 0.33 * a)
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 8),
-      );
-      canvas.drawArc(
-        rect,
-        -math.pi * 3 / 4,
-        math.pi / 2,
-        false,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeCap = StrokeCap.round
-          ..strokeWidth = 44
-          ..color = Colors.white.withValues(alpha: a),
+          ..strokeWidth = 38
+          ..color = _coral.withValues(alpha: a),
       );
     }
   }
-
   @override
   bool shouldRepaint(_LogoPainter old) => old.progress != progress;
 }
@@ -298,7 +267,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(colors: [Color(0xFFFFF8F3), Color(0xFFFFE3E8)], begin: Alignment.topCenter, end: Alignment.bottomCenter),
+          color: _bg,
         ),
         child: Center(
           child: AnimatedBuilder(
@@ -316,8 +285,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                     offset: Offset(0, 14 * (1 - text)),
                     child: const Text.rich(TextSpan(children: [
                       TextSpan(text: 'Meet', style: TextStyle(color: _ink)),
-                      TextSpan(text: 'ory', style: TextStyle(color: _coral)),
-                    ]), style: TextStyle(fontSize: 34, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+                      TextSpan(text: 'ory', style: TextStyle(color: _orange)),
+                    ]), style: TextStyle(fontSize: 34, fontWeight: FontWeight.w500, letterSpacing: 5)),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -499,7 +468,7 @@ class _IntroScreenState extends State<IntroScreen> {
                 margin: const EdgeInsets.all(4),
                 width: k == _i ? 22 : 8,
                 height: 8,
-                decoration: BoxDecoration(color: k == _i ? _coral : const Color(0xFFE6D8D0), borderRadius: BorderRadius.circular(99)),
+                decoration: BoxDecoration(color: k == _i ? _coral : const Color(0xFF2A2A2A), borderRadius: BorderRadius.circular(99)),
               ),
           ]),
           Padding(
@@ -693,7 +662,7 @@ class _AdBannerState extends State<AdBanner> {
     final ad = _ad;
     if (!_loaded || ad == null) return const SizedBox.shrink();
     return Container(
-      color: Colors.white,
+      color: _bg,
       alignment: Alignment.center,
       width: double.infinity,
       height: AdSize.banner.height.toDouble(),
@@ -712,7 +681,6 @@ class Avatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return SizedBox(
       width: size,
       height: size,
@@ -1010,7 +978,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         content: Column(mainAxisSize: MainAxisSize.min, children: [
           Text('${mesh.me?.emoji ?? ''}${p.emoji}', style: const TextStyle(fontSize: 56)),
           const SizedBox(height: 8),
-          const Text('マッチしました！', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: _coral)),
+          const Text('マッチしました！', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: _orange)),
           const SizedBox(height: 6),
           Text('${p.name} さんとお互いにいいねしました', textAlign: TextAlign.center),
         ]),
@@ -1054,7 +1022,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 margin: const EdgeInsets.only(right: 16),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: mesh.running ? const Color(0xFFE3F8EE) : const Color(0xFFEFEFEF),
+                  color: mesh.running ? const Color(0xFF17201A) : const Color(0xFF222222),
                   borderRadius: BorderRadius.circular(99),
                 ),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -1062,7 +1030,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   const SizedBox(width: 6),
                   Text(
                     mesh.running ? '近くに $online人' : '停止中',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: mesh.running ? const Color(0xFF127A52) : Colors.black54),
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: mesh.running ? const Color(0xFF8FB89B) : Colors.white54),
                   ),
                 ]),
               ),
@@ -1208,7 +1176,7 @@ class PersonCard extends StatelessWidget {
               Wrap(spacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
                 Text(p.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
                 if (match) Pill('マッチ', color: cs.primaryContainer, bold: true),
-                if (shared.isNotEmpty) Pill('共通 ${shared.length}', color: _sharedColor, bold: true, textColor: Colors.black87),
+                if (shared.isNotEmpty) Pill('共通 ${shared.length}', color: _sharedColor, bold: true, textColor: _orange),
               ]),
               const SizedBox(height: 4),
               Text(p.bio.isEmpty ? '（ひとことなし）' : p.bio,
@@ -1218,7 +1186,7 @@ class PersonCard extends StatelessWidget {
                 Wrap(spacing: 6, runSpacing: 6, children: [
                   for (final t in p.tags)
                     shared.contains(t)
-                        ? Pill('#$t', color: _sharedColor, bold: true, textColor: Colors.black87)
+                        ? Pill('#$t', color: _sharedColor, bold: true, textColor: _orange)
                         : Pill('#$t'),
                 ]),
               ],
@@ -1503,7 +1471,7 @@ class _PhotoTileState extends State<PhotoTile> {
           width: 190,
           height: 110,
           alignment: Alignment.center,
-          color: const Color(0xFFF1E9E4),
+          color: const Color(0xFF242424),
           child: const Text('📷 写真が届きました\nタップで表示', textAlign: TextAlign.center),
         ),
       );
@@ -1699,7 +1667,7 @@ class PromoCard extends StatelessWidget {
               const SizedBox(height: 10),
               FilledButton(
                 onPressed: () => homeTab.value = 3,
-                style: FilledButton.styleFrom(backgroundColor: Colors.white, foregroundColor: _coral),
+                style: FilledButton.styleFrom(backgroundColor: _orange, foregroundColor: _onAccent),
                 child: const Text('くわしく見る'),
               ),
             ]),
@@ -1866,7 +1834,7 @@ class PaywallCard extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: _brandGradient,
               borderRadius: BorderRadius.circular(26),
-              boxShadow: const [BoxShadow(color: Color(0x40FF4D6D), blurRadius: 24, offset: Offset(0, 10))],
+              boxShadow: const [],
             ),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Row(children: [
@@ -1905,8 +1873,8 @@ class PaywallCard extends StatelessWidget {
                 child: FilledButton(
                   onPressed: billing.selectedProduct == null || billing.busy ? null : billing.buy,
                   style: FilledButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: _coral,
+                    backgroundColor: _orange,
+                    foregroundColor: _onAccent,
                     disabledBackgroundColor: const Color(0x66FFFFFF),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
@@ -1988,7 +1956,6 @@ class ProximityTab extends StatelessWidget {
               ]),
             ),
             const SizedBox(height: 14),
-
             if (!prox.supported) const _Notice('この端末は、Bluetooth LE に対応していません'),
             Card(
               child: SwitchListTile(
