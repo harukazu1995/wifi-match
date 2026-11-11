@@ -113,7 +113,7 @@ class WifiMatchApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'WiFi Match',
+      title: 'Nearly',
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       supportedLocales: const [Locale('ja'), Locale('en'), Locale('ko'), Locale('zh')],
       localeResolutionCallback: (locale, supported) {
@@ -1280,7 +1280,7 @@ Future<bool> reportUser(BuildContext context, Profile p) async {
     ),
   );
   if (ok != true) return false;
-  final report = 'WiFi Match 通報\n相手: ${p.name} (${p.id})\n理由: $reason\n日時: ${DateTime.now().toIso8601String()}';
+  final report = 'Nearly 通報\n相手: ${p.name} (${p.id})\n理由: $reason\n日時: ${DateTime.now().toIso8601String()}';
   await Clipboard.setData(ClipboardData(text: report));
   await mesh.block(p.id);
   final nav = navKey.currentContext;
@@ -1718,7 +1718,7 @@ Future<void> reportEncounter(Encounter e) async {
   );
   if (ok != true) return;
   final at = DateTime.fromMillisecondsSinceEpoch(e.at).toIso8601String();
-  await Clipboard.setData(ClipboardData(text: 'WiFi Match 通報(レーダー)\n相手: ${e.name}\n日時: $at'));
+  await Clipboard.setData(ClipboardData(text: 'Nearly 通報(レーダー)\n相手: ${e.name}\n日時: $at'));
   await prox.blockEncounter(e);
   toast('通報して、非表示にしました');
 }
@@ -1867,7 +1867,7 @@ class PaywallCard extends StatelessWidget {
                 Icon(Icons.workspace_premium, color: Colors.white, size: 26),
                 SizedBox(width: 8),
                 Expanded(
-                  child: Text('WiFi Match プレミアム', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
+                  child: Text('Nearly プレミアム', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
                 ),
               ]),
               const SizedBox(height: 6),
