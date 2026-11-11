@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex"><meta name="theme-color" content="#1B1030">
+<title>Meetory 見本</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one-screen phone app. Header, scrolling content, six-tab bottom bar. */
+:root{
+  --bg:#FFF8F3; --card:#FFFFFF; --ink:#2B2430; --sub:#7A6F78; --line:#F1E4E4;
+  --coral:#FF4D6D; --orange:#FF8A4C; --chip:#F6F0F2; --note:#FFF1C9; --ok:#1FB57A; --okbg:#E3F8EE;
+  --grad:linear-gradient(135deg,#FF4D6D,#FF8A4C);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#1C171D; --card:#2A232B; --ink:#F6EEF1; --sub:#B3A7B0; --line:#3A313C;
+  --chip:#372E39; --note:#4A3F22; --okbg:#173A2C; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1C171D; --card:#2A232B; --ink:#F6EEF1; --sub:#B3A7B0; --line:#3A313C;
+  --chip:#372E39; --note:#4A3F22; --okbg:#173A2C; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans JP",system-ui,-apple-system,"Hiragino Sans",sans-serif;font-size:15px;line-height:1.45;
+  padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}
+#app{height:100%;max-width:480px;margin:0 auto;display:flex;flex-direction:column;position:relative}
+header{display:flex;align-items:center;gap:8px;padding:10px max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px))}
+.logo{width:36px;height:36px;border-radius:9px;overflow:hidden;box-shadow:0 3px 8px rgba(40,10,60,.25)}
+.logo svg{display:block;width:100%;height:100%}
+h1{font-size:20px;margin:0;font-weight:900;letter-spacing:.2px;flex:1}
+h1 b{color:var(--coral)}
+.live{font-size:12.5px;font-weight:700;background:var(--okbg);color:var(--ok);padding:5px 11px;border-radius:99px}
+main{flex:1;min-height:0;overflow-y:auto;padding:6px max(16px,env(safe-area-inset-left,0px)) 24px max(16px,env(safe-area-inset-right,0px))}
+nav{display:grid;grid-template-columns:repeat(6,1fr);background:var(--card);border-top:1px solid var(--line);padding:6px 0 calc(6px + env(safe-area-inset-bottom,0px))}
+nav button{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;color:var(--sub);padding:4px 0;position:relative;font-weight:600}
+nav button svg{width:22px;height:22px;fill:currentColor}
+nav button[aria-selected="true"]{color:var(--coral)}
+nav button:focus-visible{outline:2px solid var(--coral);border-radius:8px}
+.dot{position:absolute;top:0;left:55%;background:var(--coral);color:#fff;border-radius:99px;font-size:9.5px;padding:1px 5px;font-weight:800}
+h2{font-size:21px;margin:6px 0 2px;font-weight:800}
+.hint{color:var(--sub);font-size:13.5px;margin:0 0 12px}
+.card{background:var(--card);border-radius:20px;padding:14px;margin-bottom:12px;box-shadow:0 4px 14px rgba(40,10,30,.07)}
+.row{display:flex;gap:10px;align-items:flex-start}
+.av{width:56px;height:56px;flex:none;border-radius:50%;overflow:hidden;box-shadow:0 3px 8px rgba(40,10,30,.18)}
+.av svg{display:block;width:100%;height:100%}
+.ci{display:inline-grid;place-items:center;border-radius:12px;flex:none;box-shadow:0 3px 8px rgba(40,10,30,.18)}
+.ci svg{width:62%;height:62%}
+.date{width:58px;flex:none;border-radius:16px;background:var(--grad);color:#fff;text-align:center;padding:8px 4px 7px;box-shadow:0 4px 10px rgba(255,77,109,.3)}
+.date b{display:block;font-size:26px;line-height:1;font-weight:900}
+.date small{font-size:11px;font-weight:700;opacity:.95}
+.pin{display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--sub)}
+.pin svg{width:14px;height:14px}
+.thumb{margin:-14px -14px 10px;height:84px;border-radius:20px 20px 0 0;overflow:hidden}
+.thumb svg,.flyer svg{display:block;width:100%;height:100%}
+.flyer{position:relative;margin:-14px -14px 10px;height:190px;border-radius:20px 20px 0 0;overflow:hidden;color:#fff}
+.flyer .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,8,40,.05) 35%,rgba(20,8,40,.78))}
+.flyer .ft{position:absolute;left:14px;right:14px;bottom:12px}
+.flyer .ft b{display:block;font-size:19px;line-height:1.25;font-weight:900;text-shadow:0 2px 8px rgba(0,0,0,.45)}
+.flyer .ft span{font-size:12.5px;opacity:.95}
+.flyer .fd{position:absolute;top:12px;right:12px;background:#fff;color:#2B2430;border-radius:12px;padding:5px 10px;font-size:12px;font-weight:800;box-shadow:0 3px 10px rgba(0,0,0,.25)}
+.flyer .fa{position:absolute;top:12px;left:12px;background:rgba(255,255,255,.22);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.5);border-radius:99px;padding:3px 10px;font-size:11px;font-weight:700}
+.grow{flex:1;min-width:0}
+.name{font-weight:800;font-size:16px}
+.meta{font-size:12px;color:var(--sub)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0}
+.chip{background:var(--chip);border-radius:99px;font-size:12px;padding:3px 10px}
+.chip.hit{background:#FFE9A8;color:#4a3a00;font-weight:700}
+.btn{all:unset;cursor:pointer;background:var(--grad);color:#fff;font-weight:800;padding:9px 16px;border-radius:99px;font-size:14px;text-align:center}
+.btn.ghost{background:transparent;color:var(--coral);border:1.5px solid var(--coral);padding:7.5px 14px}
+.btn.on{background:var(--coral);color:#fff}
+.btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.btn[disabled]{opacity:.5}
+.banner{background:var(--grad);color:#fff;border-radius:22px;padding:16px;margin-bottom:10px}
+.banner h3{margin:0 0 4px;font-size:19px;font-weight:900}
+.banner p{margin:0;font-size:14px}
+.note{background:var(--note);border-radius:12px;padding:8px 12px;font-size:12.5px;margin-bottom:12px}
+.seg{display:grid;grid-template-columns:1fr 1fr;border:1.5px solid var(--line);border-radius:99px;overflow:hidden;margin-bottom:10px}
+.seg button{all:unset;cursor:pointer;text-align:center;padding:9px;font-weight:700;font-size:14px;color:var(--sub)}
+.seg button[aria-pressed="true"]{background:var(--coral);color:#fff}
+.filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:6px}
+.filters button{all:unset;cursor:pointer;white-space:nowrap;background:var(--chip);padding:6px 13px;border-radius:99px;font-size:13px}
+.filters button[aria-pressed="true"]{background:var(--coral);color:#fff;font-weight:700}
+select,input,textarea{font:inherit;color:var(--ink);background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:9px 11px;width:100%}
+label{display:block;font-size:12.5px;color:var(--sub);margin:10px 0 4px}
+.fab{position:absolute;right:16px;bottom:78px;z-index:5;background:var(--coral);color:#fff;font-weight:800;border-radius:99px;padding:13px 18px;box-shadow:0 8px 20px rgba(255,77,109,.4);border:0;font:inherit;font-weight:800;cursor:pointer}
+.sheet{position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:20;display:flex;align-items:flex-end}
+.sheet>div{background:var(--bg);width:100%;max-height:88%;overflow:auto;border-radius:24px 24px 0 0;padding:18px max(16px,env(safe-area-inset-left,0px)) 24px}
+.bubble{max-width:78%;padding:9px 13px;border-radius:18px;margin:6px 0;font-size:14.5px}
+.me{background:var(--grad);color:#fff;margin-left:auto;border-bottom-right-radius:5px}
+.you{background:var(--card);border-bottom-left-radius:5px;box-shadow:0 2px 8px rgba(40,10,30,.07)}
+.composer{display:flex;gap:8px;margin-top:10px}
+.radar{width:210px;height:210px;margin:10px auto 6px;position:relative}
+.radar i{position:absolute;inset:0;border:2px solid var(--coral);border-radius:50%;opacity:0;animation:rp 3s infinite}
+.radar i:nth-child(2){animation-delay:1s}.radar i:nth-child(3){animation-delay:2s}
+.radar b{position:absolute;inset:80px;border-radius:50%;background:var(--grad);display:grid;place-items:center;color:#fff;font-size:22px}
+@keyframes rp{0%{transform:scale(.3);opacity:.8}100%{transform:scale(1);opacity:0}}
+@media (prefers-reduced-motion:reduce){.radar i{animation:none;opacity:.25}.radar i:nth-child(2){transform:scale(.7)}.radar i:nth-child(3){transform:scale(.45)}}
+.plan{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.plan div{border:2px solid rgba(255,255,255,.6);border-radius:18px;padding:10px;text-align:center;background:rgba(255,255,255,.18)}
+.plan div.sel{background:#fff;color:var(--coral)}
+.plan strong{display:block;font-size:22px}
+.toast{position:absolute;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:99px;font-size:13px;z-index:30;max-width:90%}
+.tag{display:inline-block;font-size:11px;background:#fff;color:var(--coral);font-weight:800;padding:2px 10px;border-radius:99px}
+.promo{position:relative;overflow:hidden;border-radius:24px;padding:18px;color:#fff;background:linear-gradient(150deg,#FF4D6D,#FF8A4C 60%,#FFC46B);box-shadow:0 10px 26px rgba(255,77,109,.32);margin-bottom:12px}
+.promo:after{content:"";position:absolute;right:-30px;top:-30px;width:140px;height:140px;border-radius:50%;background:radial-gradient(#fff6,#fff0 70%)}
+.promo h3{margin:8px 0 4px;font-size:20px;font-weight:900;line-height:1.3}.promo p{margin:0;font-size:13.5px;opacity:.95}
+.lockwrap{position:relative;margin-top:4px}
+.blur{filter:blur(7px);opacity:.75;pointer-events:none;user-select:none}
+.lockcard{position:absolute;left:8px;right:8px;top:18px;background:var(--card);border-radius:24px;padding:22px 18px;text-align:center;box-shadow:0 18px 40px rgba(40,10,30,.28)}
+.lockcard h3{margin:10px 0 4px;font-size:19px;font-weight:900}.lockcard p{margin:0 0 14px;color:var(--sub);font-size:13.5px}.lockcard small{display:block;margin-top:8px;color:var(--sub);font-size:12px}
+.lockic{width:52px;height:52px;border-radius:18px;margin:0 auto;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#FF4D6D,#FF8A4C);box-shadow:0 6px 16px rgba(255,77,109,.4)}.lockic svg{width:26px;height:26px}
+.pw{position:absolute;inset:0;z-index:25;background:var(--bg);overflow-y:auto}
+.pw-hero{position:relative;overflow:hidden;text-align:center;color:#fff;padding:calc(10px + env(safe-area-inset-top,0px)) 20px 64px;background:linear-gradient(165deg,#FF4D6D 0%,#FF7A55 55%,#FFB45E 100%)}
+.pw-x{all:unset;cursor:pointer;position:absolute;left:12px;top:calc(8px + env(safe-area-inset-top,0px));width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.22);text-align:center;font-size:24px;line-height:34px}
+.pw-art{display:block;width:100%;max-width:330px;margin:8px auto 0}
+.pw-badge{display:inline-block;letter-spacing:.18em;font-size:11px;font-weight:800;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.55);padding:4px 14px;border-radius:99px;margin-top:2px}
+.pw-t{font-size:25px;line-height:1.3;margin:10px 0 6px;font-weight:900;text-shadow:0 2px 10px rgba(120,20,40,.25)}
+.pw-s{margin:0;font-size:14px;opacity:.95}
+.pw-body{position:relative;margin-top:-34px;background:var(--bg);border-radius:30px 30px 0 0;padding:22px max(16px,env(safe-area-inset-left,0px)) 20px}
+.feat{display:flex;gap:14px;background:var(--card);border-radius:20px;padding:14px;margin-bottom:10px;box-shadow:0 4px 14px rgba(40,10,30,.07)}
+.feat .ft{width:46px;height:46px;flex:none;border-radius:15px;display:grid;place-items:center;color:#fff;fill:#fff;box-shadow:0 5px 12px rgba(40,10,30,.2)}.feat .ft svg{width:24px;height:24px}
+.feat b{font-size:15.5px}.feat p{margin:2px 0 0;font-size:13px;color:var(--sub);line-height:1.5}
+.pw-h{font-size:17px;font-weight:900;margin:22px 0 10px}
+.cmp{background:var(--card);border-radius:20px;overflow:hidden;box-shadow:0 4px 14px rgba(40,10,30,.07)}
+.cr{display:grid;grid-template-columns:1fr 54px 76px;align-items:center;padding:11px 12px;border-top:1px solid var(--line);font-size:13.5px}
+.cr.ch{border-top:0;font-size:12px;font-weight:800;color:var(--sub);text-align:center}.cr.ch span:first-child{text-align:left}
+.cr span:not(:first-child){display:grid;place-items:center}.cr .pr{background:rgba(255,77,109,.09);margin:-11px 0;padding:11px 0;color:var(--coral)}.cr.ch .pr{color:var(--coral)}
+.cr svg{width:18px;height:18px}.cr .ok{color:var(--coral)}.cr .no{color:var(--sub);opacity:.6}
+.plans{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pl{all:unset;cursor:pointer;position:relative;text-align:center;background:var(--card);border:2px solid var(--line);border-radius:22px;padding:22px 8px 14px;box-sizing:border-box}
+.pl.sel{border-color:var(--coral);box-shadow:0 8px 20px rgba(255,77,109,.25)}
+.pl:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.pl b{display:block;font-size:14px;color:var(--sub)}.pl strong{display:block;font-size:34px;font-weight:900;line-height:1.15;color:var(--ink)}.pl strong small{font-size:15px;font-weight:800;margin-left:2px}
+.pl em{display:block;font-style:normal;font-size:12px;color:var(--sub);margin-top:2px}
+.pl.sel strong{color:var(--coral)}
+.rib{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#FF4D6D,#FF8A4C);color:#fff;font-size:11.5px;font-weight:800;padding:3px 12px;border-radius:99px;white-space:nowrap}
+.legal{font-size:11px;color:var(--sub);line-height:1.55;margin:16px 0 4px}
+.pw-cta{position:sticky;bottom:0;padding:18px max(16px,env(safe-area-inset-left,0px)) calc(12px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,transparent,var(--bg) 35%);text-align:center}
+.btn.big{display:block;padding:16px;font-size:16.5px;box-shadow:0 10px 24px rgba(255,77,109,.38)}
+.lnk{all:unset;cursor:pointer;display:block;margin:8px auto 0;font-size:12.5px;color:var(--sub);text-decoration:underline}
+.rd{position:relative;width:min(310px,84vw);aspect-ratio:1;margin:10px auto 8px;border-radius:50%;background:radial-gradient(circle at 50% 45%,#4B2A78 0%,#2A1650 55%,#1B0F38 100%);box-shadow:inset 0 0 50px rgba(255,77,109,.28),0 16px 40px rgba(40,10,70,.45);overflow:hidden;border:2px solid rgba(255,255,255,.14)}
+.rd.on{box-shadow:inset 0 0 60px rgba(255,77,109,.4),0 16px 44px rgba(255,77,109,.28)}
+.rl{position:absolute;border-radius:50%;border:1.5px solid rgba(255,255,255,.2)}
+.rl.l1{inset:35%}.rl.l2{inset:18%}.rl.l3{inset:2%}
+.rx,.ry{position:absolute;background:rgba(255,255,255,.1)}.rx{left:3%;right:3%;top:50%;height:1px}.ry{top:3%;bottom:3%;left:50%;width:1px}
+.rs{position:absolute;left:50%;font-size:9.5px;color:rgba(255,255,255,.55);transform:translateX(4px)}
+.rs.s1{top:34%}.rs.s2{top:17%}.rs.s3{top:1.5%}
+.sweep{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,rgba(255,77,109,0) 0deg,rgba(255,77,109,0) 250deg,rgba(255,110,140,.5) 358deg,rgba(255,200,210,.9) 360deg);animation:spin 4s linear infinite}
+.pu{position:absolute;inset:36%;border-radius:50%;border:2px solid rgba(255,140,170,.8);animation:pulse 3.6s ease-out infinite;opacity:0}
+.pu.d2{animation-delay:1.2s}.pu.d3{animation-delay:2.4s}
+.bl{position:absolute;transform:translate(-50%,-50%);text-align:center;animation:blip 4s ease-in-out infinite;animation-delay:var(--d)}
+.bl .av{width:36px;height:36px;border:2px solid #fff;box-shadow:none}.bl:before{content:"";position:absolute;left:50%;top:18px;width:60px;height:60px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(255,120,150,.6),rgba(255,120,150,0) 68%)}.bl .av,.bl small{position:relative}
+.bl small{display:block;margin-top:2px;font-size:9.5px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6);white-space:nowrap}
+.mine{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+.mine:before{content:"";position:absolute;inset:-26px;border-radius:50%;background:radial-gradient(circle,rgba(255,77,109,.75),rgba(255,77,109,0) 68%)}.mine .av{position:relative;width:46px;height:46px;border:3px solid #fff;box-shadow:none}.mine:after{content:"";position:absolute;inset:-8px;border-radius:50%;border:3px solid rgba(255,77,109,.45)}
+.rstat{display:flex;align-items:center;justify-content:center;gap:8px;font-weight:800;font-size:14px;margin-top:4px}
+.rdot{width:9px;height:9px;border-radius:50%;background:var(--sub)}.rdot.on{background:var(--ok);box-shadow:0 0 0 4px rgba(31,181,122,.25)}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.kpis div{background:var(--card);border-radius:16px;padding:10px 4px;text-align:center;box-shadow:0 3px 10px rgba(40,10,30,.07)}
+.kpis b{display:block;font-size:22px;color:var(--coral);font-weight:900}.kpis span{font-size:11.5px;color:var(--sub)}
+#open{position:absolute;inset:0;z-index:50;background:linear-gradient(180deg,#FFF8F3,#FFE3E8);transition:opacity .4s;display:flex;flex-direction:column}
+#open.out{opacity:0}
+#open .sp{margin:auto;text-align:center;color:#2B2430}
+#open .sl{width:170px;height:170px;margin:0 auto;border-radius:40px;overflow:hidden;box-shadow:0 14px 34px rgba(91,61,255,.3);animation:lgin .9s ease-out both}
+#open .sl svg{display:block;width:100%;height:100%}
+#open .arc{opacity:0;animation:arcin .5s ease-out forwards}
+#open .arc.a0{animation-delay:.7s}#open .arc.a1{animation-delay:.9s}#open .arc.a2{animation-delay:1.1s}
+#open .dotc{transform-box:fill-box;transform-origin:center;transform:scale(0);animation:dotin .5s cubic-bezier(.3,1.6,.5,1) .3s forwards}
+#open .st{font-size:34px;font-weight:900;letter-spacing:.5px;margin-top:10px;opacity:0;animation:txin .6s ease-out 1.5s forwards}
+#open .st b{color:var(--coral)}
+#open .ss{font-size:14px;color:#2B2430;opacity:0;margin-top:8px;animation:txin .6s ease-out 1.9s forwards;--o:.6}
+.in{display:flex;flex-direction:column;height:100%;color:#2B2430}
+.inx{text-align:right;padding:12px 16px}
+.inb{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:0 32px;animation:txin .4s ease-out}
+.ie{font-size:88px;line-height:1.1}.inb h2{font-size:26px;margin:24px 0 12px;font-weight:800}.inb p{font-size:16px;line-height:1.6;color:#7A6F78;margin:0}
+.idots{display:flex;justify-content:center;margin-bottom:8px}.idots i{width:8px;height:8px;border-radius:99px;background:#E6D8D0;margin:4px;transition:width .2s}.idots i.on{width:22px;background:var(--coral)}
+@keyframes lgin{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
+@keyframes arcin{from{opacity:0}to{opacity:1}}
+@keyframes dotin{to{transform:scale(1)}}
+@keyframes txin{from{opacity:0;transform:translateY(14px)}to{opacity:var(--o,1);transform:none}}
+@media (prefers-reduced-motion:reduce){#open *{animation-duration:.01s!important;animation-delay:0s!important}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%{transform:scale(.3);opacity:.9}100%{transform:scale(2.6);opacity:0}}
+@keyframes blip{0%,55%{opacity:.35;transform:translate(-50%,-50%) scale(.9)}62%{opacity:1;transform:translate(-50%,-50%) scale(1.12)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@media (prefers-reduced-motion:reduce){.sweep,.pu,.bl{animation:none}.bl{opacity:1}}
+</style>
+<div id="app">
+  <header>
+    <div class="logo"><svg viewBox="0 0 1024 1024" aria-label="Meetory"><defs><clipPath id="lc"><rect width="1024" height="1024" rx="230"/></clipPath><linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF3D6B"/><stop offset="1" stop-color="#5B3DFF"/></linearGradient><radialGradient id="lg2"><stop offset="0" stop-color="#FFB347" stop-opacity=".78"/><stop offset="1" stop-color="#FFB347" stop-opacity="0"/></radialGradient><radialGradient id="lg3"><stop offset="0" stop-color="#29D6FF" stop-opacity=".75"/><stop offset="1" stop-color="#29D6FF" stop-opacity="0"/></radialGradient><radialGradient id="lg4"><stop offset="0" stop-color="#FF6AD5" stop-opacity=".47"/><stop offset="1" stop-color="#FF6AD5" stop-opacity="0"/></radialGradient><linearGradient id="lg5" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".6"/><stop offset="1" stop-color="#fff" stop-opacity=".2"/></linearGradient></defs><g clip-path="url(#lc)"><rect width="1024" height="1024" fill="url(#lg1)"/><circle cx="200" cy="180" r="560" fill="url(#lg2)"/><circle cx="860" cy="900" r="560" fill="url(#lg3)"/><circle cx="800" cy="150" r="380" fill="url(#lg4)"/></g><path id="lb" d="M150 410A200 200 0 0 1 350 210H674A200 200 0 0 1 874 410V530A200 200 0 0 1 674 730H450L260 880L320 730H350A200 200 0 0 1 150 530Z" fill="url(#lg5)" stroke="#fff" stroke-opacity=".75" stroke-width="6" stroke-linejoin="round"/><g fill="none" stroke="#fff" stroke-width="44" stroke-linecap="round"><path d="M462.500 470.500A70 70 0 0 1 561.500 470.500"/><path d="M416.500 424.500A135 135 0 0 1 607.500 424.500"/><path d="M370.600 378.600A200 200 0 0 1 653.400 378.600"/></g><circle cx="512" cy="520" r="38" fill="#fff"/></svg></div>
+    <h1>Meet<b>ory</b></h1>
+    <span class="live" id="live">近くに 3人</span>
+  </header>
+  <main id="main"></main>
+  <nav id="nav" role="tablist"></nav>
+  <div id="over"></div>
+</div>
+<script>
+var I={
+ people:'<svg viewBox="0 0 24 24"><path d="M16 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3zM8 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3zm0 2c-2.3 0-7 1.2-7 3.5V19h14v-2.5C15 14.2 10.3 13 8 13zm8 0c-.3 0-.6 0-1 .1A4.2 4.2 0 0 1 17 16.5V19h6v-2.5c0-2.3-4.7-3.5-7-3.5z"/></svg>',
+ heart:'<svg viewBox="0 0 24 24"><path d="M12 21l-1.5-1.3C5.4 15.4 2 12.4 2 8.7A4.7 4.7 0 0 1 6.7 4 5.2 5.2 0 0 1 12 6.1 5.2 5.2 0 0 1 17.3 4 4.7 4.7 0 0 1 22 8.7c0 3.7-3.400 6.700-8.500 11z"/></svg>',
+ forum:'<svg viewBox="0 0 24 24"><path d="M21 6h-2v9H6v2a1 1 0 0 0 1 1h11l4 4V7a1 1 0 0 0-1-1zM17 12V3a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v14l4-4h10a1 1 0 0 0 1-1z"/></svg>',
+ walk:'<svg viewBox="0 0 24 24"><path d="M13.500 5.500a2 2 0 1 0-2-2 2 2 0 0 0 2 2zM9.800 8.900 7 23h2.100l1.800-8 2.100 2v6h2v-7.500l-2.100-2 .6-3A7.300 7.300 0 0 0 19 13v-2c-1.900 0-3.500-1-4.300-2.400l-1-1.600a2 2 0 0 0-1.700-1 2 2 0 0 0-.7.100L6 8.300V13h2V9.600z"/></svg>',
+ me:'<svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm0 2c-2.700 0-8 1.300-8 4v2h16v-2c0-2.700-5.300-4-8-4z"/></svg>',
+ board:'<svg viewBox="0 0 24 24"><path d="M18 11v2h4v-2zm-2 6.600 3.200 2.400 1.200-1.600-3.200-2.400zM20.400 5.600 19.200 4 16 6.400 17.200 8zM4 9a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h1v4h2v-4h1l5 3V6L8 9zm11.500 3A4.500 4.500 0 0 0 13 8v8a4.500 4.500 0 0 0 2.500-4z"/></svg>'};
+var TABS=[['people','みんな'],['heart','マッチ'],['forum','広場'],['walk','レーダー'],['me','自分'],['board','掲示板']];
+var tab=+(function(){try{return localStorage.getItem('nearly_tab')}catch(e){return 0}})()||0;
+var liked={},chat={ 'みお':[['you','はじめまして！同じカフェにいたみたい☕'],['me','ほんとですか！何飲んでました？']]};
+var plaza=[['はる','🎧','今日の天気いいですね☀️'],['ゆうき','🐻','このWiFiの近くにいる人、ランチ行きませんか？']];
+var PEOPLE=[['みお','🐙','22','カフェ・写真・映画',['カフェ','写真']],['はる','🎧','25','音楽・ライブ・旅行',['音楽']],['ゆうき','🐻','27','ゲーム・映画・散歩',['映画']],['そら','🚗','24','旅行・ドライブ・写真',['写真']]];
+var MY=['写真','映画','音楽'];
+var posts=[
+ {ev:0,cat:'テーマパーク',t:'ディズニーに一緒に行ける人！',area:'関東',when:'来月の平日',n:2,body:'1人だと乗り物が寂しいので、一緒に回れる人を探しています。のんびり派です。',nick:'ゆうき',em:'🐻'},
+ {ev:0,cat:'ライブ・フェス',t:'夏フェス、現地で合流したい',area:'全国',when:'8月の週末',n:3,body:'一人参戦です。ご飯だけ一緒でも大歓迎。',nick:'はる',em:'🎧'},
+ {ev:0,cat:'グルメ',t:'大阪でたこ焼き巡りしませんか',area:'近畿',when:'今度の土曜',n:3,body:'有名店を3軒くらい食べ歩きしたいです。',nick:'みお',em:'🐙'},
+ {ev:0,cat:'旅行',t:'北海道の旅、道中だけ一緒に',area:'北海道・東北',when:'9月ごろ',n:2,body:'レンタカーで回る予定です。景色が好きな人どうぞ。',nick:'そら',em:'🚗'},
+ {ev:1,cat:'ライブ・フェス',t:'夏の音楽フェス(サンプル)',m:'8',area:'関東',when:'8月第1週末',want:24,body:'野外の大型フェスの一例です。一緒に行く人を募集できます。',nick:'Meetory編集部',em:'🎪'},
+ {ev:1,cat:'テーマパーク',t:'ハロウィンイベント(サンプル)',m:'10',area:'関東',when:'10月中',want:31,body:'テーマパークの季節イベントの例です。',nick:'Meetory編集部',em:'🎃'},
+ {ev:1,cat:'旅行',t:'紅葉ライトアップ(サンプル)',m:'11',area:'近畿',when:'11月中旬',want:9,body:'夜の紅葉を見に行く仲間を探せます。',nick:'Meetory編集部'},
+ {ev:1,cat:'グルメ',t:'全国ご当地グルメ祭り(サンプル)',m:'全国',area:'全国',when:'各地で開催',want:12,body:'各地のご当地グルメが集まるイベントの例です。',nick:'Meetory編集部'},
+ {ev:1,cat:'スポーツ',t:'市民マラソン大会(サンプル)',m:'11',area:'中部',when:'11月下旬',want:15,body:'一緒に走る仲間や、応援に行く仲間を探せます。',nick:'Meetory編集部'},
+ {ev:1,cat:'旅行',t:'冬のイルミネーション(サンプル)',m:'12',area:'九州・沖縄',when:'12月',want:18,body:'夜景を見に行く仲間を探せます。',nick:'Meetory編集部'},
+ {ev:1,cat:'趣味・その他',t:'クラフトマーケット(サンプル)',m:'毎月',area:'中国・四国',when:'毎月第2日曜',want:6,body:'手作り雑貨を見に行く仲間を探せます。',nick:'Meetory編集部'},
+ {ev:1,cat:'旅行',t:'雪と氷の祭典(サンプル)',m:'2',area:'北海道・東北',when:'2月',want:27,body:'冬の北国を楽しむ仲間を探せます。',nick:'Meetory編集部'}];
+var AREAS=['全国','北海道・東北','関東','中部','近畿','中国・四国','九州・沖縄'],CATS=['すべて','テーマパーク','ライブ・フェス','旅行','グルメ','スポーツ','趣味・その他'];
+var bd={ev:0,area:'全国',cat:'すべて'},plan='y',radarOn=true,chatWith=null;
+function A(n){
+  var h=0,i;for(i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))>>>0;
+  var bgs=[['#FFC8A2','#FF7E9D'],['#A9DCFF','#8A8CFF'],['#B6F0D2','#4FC3A8'],['#FFE08A','#FFA05A'],['#EBC6FF','#9C7BFF']];
+  var hairs=[['#2B2430','#4A4050'],['#5A3A2A','#8A5C42'],['#B5651D','#E0974A'],['#3A4A8A','#5E73C4'],['#8A2F4A','#C25577'],['#1F1A24','#3B3342']];
+  var skins=[['#FFE6D5','#FFD2B8'],['#FFD9BE','#F6BE9A'],['#F2C4A0','#E0A47C'],['#E8B48C','#CF946A']];
+  var tops=['#FF4D6D','#3D6BFF','#2BB38A','#FFB347','#8F6BFF','#2B2430'];
+  var b=bgs[h%5],hr=hairs[(h>>>3)%6],sk=skins[(h>>>6)%4],st=(h>>>9)%5,ac=(h>>>12)%4,tp=tops[(h>>>14)%6],op=(h>>>17)%2,k=h%997;
+  var P=function(d,f,x){return '<path d="'+d+'" fill="'+f+'"'+(x||'')+'/>'};
+  var u='a'+k;
+  var o='<div class="av"><svg viewBox="0 0 100 100" aria-hidden="true"><defs>'
+   +'<linearGradient id="b'+u+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+b[0]+'"/><stop offset="1" stop-color="'+b[1]+'"/></linearGradient>'
+   +'<radialGradient id="s'+u+'" cx=".5" cy=".4" r=".7"><stop offset="0" stop-color="'+sk[0]+'"/><stop offset="1" stop-color="'+sk[1]+'"/></radialGradient>'
+   +'<linearGradient id="h'+u+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+hr[1]+'"/><stop offset="1" stop-color="'+hr[0]+'"/></linearGradient>'
+   +'</defs><rect width="100" height="100" fill="url(#b'+u+')"/><circle cx="82" cy="14" r="24" fill="#fff" opacity=".18"/><circle cx="10" cy="92" r="20" fill="#fff" opacity=".12"/>';
+  var H='url(#h'+u+')',S='url(#s'+u+')';
+  // hair behind
+  if(st===2)o+=P('M26 52C20 24 35 10 50 10S80 24 74 52L78 86H62V58H38V86H22z',H);
+  if(st===3)o+=P('M25 54C20 24 35 10 50 10S80 24 75 54V68Q75 76 66 74H34Q25 76 25 68z',H);
+  if(st===4)o+='<circle cx="50" cy="9" r="9" fill="'+H+'"/>';
+  // body
+  o+=P('M6 104C8 82 26 73 50 73S92 82 94 104z',tp)+P('M40 74L50 90L60 74Q50 70 40 74z','#fff',' opacity=".92"')+P('M6 104C8 90 16 82 26 78Q18 90 20 104z','#000',' opacity=".08"');
+  // neck + ears + face
+  o+=P('M43 62h14v16Q50 84 43 78z','#000',' opacity="0"')+'<rect x="43" y="60" width="14" height="20" rx="6" fill="'+S+'"/><ellipse cx="50" cy="73" rx="9" ry="4" fill="#000" opacity=".10"/>';
+  o+='<circle cx="30.500" cy="50" r="5" fill="'+S+'"/><circle cx="69.500" cy="50" r="5" fill="'+S+'"/>';
+  if(op)o+='<circle cx="30" cy="56" r="1.600" fill="#FFD36B"/><circle cx="70" cy="56" r="1.600" fill="#FFD36B"/>';
+  o+=P('M29 46C29 27 39 20 50 20S71 27 71 46C71 62 61 72 50 72S29 62 29 46z',S);
+  // hair front
+  if(st===0)o+=P('M28 48C25 26 37 14 50 14S75 26 72 48C70 39 66 33 60 30 54 35 42 35 37 30 33 34 30 40 28 48z',H);
+  if(st===1)o+=P('M27 50C22 26 37 12 54 14 69 16 75 30 72 50 70 40 65 31 55 30 45 30 35 36 27 50z',H);
+  if(st===2)o+=P('M28 46C30 28 39 20 50 20S70 28 72 46C65 37 58 31 50 31S35 37 28 46z',H);
+  if(st===3)o+=P('M28 42C30 26 39 19 50 19S70 26 72 42C62 37 56 35 50 35S38 37 28 42z',H);
+  if(st===4)o+=P('M28 48C26 27 37 17 50 17S74 27 72 48C69 40 65 34 59 31 53 36 43 36 38 31 33 35 30 41 28 48z',H);
+  o+='<path d="M36 22Q44 15 54 16" fill="none" stroke="#fff" stroke-width="2.400" stroke-linecap="round" opacity=".28"/>';
+  // face features
+  var bc=hr[0];
+  o+='<path d="M35.500 41q5-3.500 9.500-1.200M55 39.800q5-2.300 9.500 1.200" fill="none" stroke="'+bc+'" stroke-width="2" stroke-linecap="round"/>';
+  o+='<ellipse cx="40.500" cy="49" rx="3.300" ry="4.300" fill="#2B2430"/><ellipse cx="59.500" cy="49" rx="3.300" ry="4.300" fill="#2B2430"/>';
+  o+='<ellipse cx="40.500" cy="51" rx="2.200" ry="2" fill="#6A4B7A" opacity=".55"/><ellipse cx="59.500" cy="51" rx="2.200" ry="2" fill="#6A4B7A" opacity=".55"/>';
+  o+='<circle cx="41.700" cy="47.400" r="1.400" fill="#fff"/><circle cx="60.700" cy="47.400" r="1.400" fill="#fff"/><circle cx="39.300" cy="50.800" r=".7" fill="#fff"/><circle cx="58.300" cy="50.800" r=".7" fill="#fff"/>';
+  o+='<path d="M37 45.200q3.500-2.400 7 0M56 45.200q3.500-2.400 7 0" fill="none" stroke="#2B2430" stroke-width="1.300" stroke-linecap="round"/>';
+  o+='<path d="M50 53q-1.800 3.200 .8 3.600" fill="none" stroke="#C98F6E" stroke-width="1.200" stroke-linecap="round" opacity=".8"/>';
+  o+='<ellipse cx="34.500" cy="58" rx="4.500" ry="2.800" fill="#FF7E9D" opacity=".42"/><ellipse cx="65.500" cy="58" rx="4.500" ry="2.800" fill="#FF7E9D" opacity=".42"/>';
+  if(h%3===0)o+='<path d="M43 61Q50 70 57 61Z" fill="#B5485A"/><path d="M45.500 66.500Q50 64.200 54.500 66.500Q50 69.500 45.500 66.500z" fill="#FF8FA3"/>';
+  else o+='<path d="M43.500 61.500Q50 67.500 56.500 61.500" fill="none" stroke="#B5485A" stroke-width="2" stroke-linecap="round"/>';
+  // accessories
+  if(ac===1)o+='<g fill="none" stroke="#2B2430" stroke-width="1.800"><circle cx="40.500" cy="49" r="7.500" fill="#fff" fill-opacity=".12"/><circle cx="59.500" cy="49" r="7.500" fill="#fff" fill-opacity=".12"/><path d="M48 48.500q2-1.600 4 0M33 47.500L29.500 45.500M67 47.500l3.500-2"/></g>';
+  if(ac===2)o+='<path d="M27 48C24 24 38 12 50 12S76 24 73 48" fill="none" stroke="#2B2430" stroke-width="3.200" stroke-linecap="round"/><rect x="22.500" y="44" width="8" height="14" rx="4" fill="#FF4D6D"/><rect x="69.500" y="44" width="8" height="14" rx="4" fill="#FF4D6D"/>';
+  return o+'</svg></div>';
+}
+var CI={
+ 'テーマパーク':['#8F6BFF','#FF7EB0','<circle cx="12" cy="11" r="6"/><path d="M12 5v12M6 11h12M7.800 6.800l8.400 8.400M16.200 6.800l-8.400 8.400M8 21l4-6 4 6"/>'],
+ 'ライブ・フェス':['#FF4D6D','#FF9A4A','<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4M9 21h6"/>'],
+ '旅行':['#3DB8FF','#5B7BFF','<path d="M3 17l5-8 4 5 3-4 6 7zM17 6.500a2 2 0 1 0 .1 0"/>'],
+ 'グルメ':['#FF9A4A','#FF5A5F','<path d="M4 11h16a8 8 0 0 1-16 0zM8 8q0-3 2-4M13 8q0-3 2-4M17 3l-4 8"/>'],
+ 'スポーツ':['#2BB38A','#1F8A6E','<circle cx="12" cy="12" r="9"/><path d="M12 8l3.500 2.500-1.300 4h-4.400l-1.300-4zM12 8V3M15.500 10.500L20 9M14.200 14.500L17 18M9.800 14.500L7 18M8.500 10.500L4 9"/>'],
+ '趣味・その他':['#8A6BFF','#3DB8FF','<path d="M9 18V6l10-2v12"/><circle cx="6.500" cy="18" r="2.500"/><circle cx="16.500" cy="16" r="2.500"/>']};
+function C(cat,sz){var c=CI[cat]||CI['趣味・その他'];sz=sz||38;return '<span class="ci" style="width:'+sz+'px;height:'+sz+'px;background:linear-gradient(135deg,'+c[0]+','+c[1]+')"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+c[2]+'</svg></span>'}
+function $(s){return document.querySelector(s)}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function toast(t){var d=document.createElement('div');d.className='toast';d.textContent=t;$('#app').appendChild(d);setTimeout(function(){d.remove()},2200)}
+function renderNav(){
+  $('#nav').innerHTML=TABS.map(function(t,i){return '<button role="tab" aria-selected="'+(i===tab)+'" data-i="'+i+'">'+I[t[0]]+'<span>'+t[1]+'</span>'+(i===1?'<span class="dot">1</span>':'')+'</button>'}).join('');
+  [].forEach.call(document.querySelectorAll('#nav button'),function(b){b.onclick=function(){tab=+b.dataset.i;chatWith=null;try{localStorage.setItem('nearly_tab',tab)}catch(e){}render()}});
+}
+function sharedChips(p){return p[3].split('・').map(function(x){return '<span class="chip'+(MY.indexOf(x)>=0?' hit':'')+'">'+esc(x)+'</span>'}).join('')}
+function people(){
+  var h='<h2>みんな</h2><p class="hint">いま同じWiFiにいる人。趣味が合う順です。</p>';
+  PEOPLE.slice().sort(function(a,b){return b[4].length-a[4].length}).forEach(function(p){
+    h+='<div class="card"><div class="row">'+A(p[0])+'<div class="grow"><div class="name">'+p[0]+' <span class="meta">'+p[2]+'歳</span></div><div class="chips">'+sharedChips(p)+'</div></div><button class="btn'+(liked[p[0]]?' on':'')+'" data-like="'+p[0]+'">'+(liked[p[0]]?'♥ 送信済み':'♡ いいね')+'</button></div></div>';
+  });
+  return h;
+}
+function matches(){
+  if(chatWith){
+    var m=chat[chatWith]||[];
+    var h='<div class="row" style="align-items:center;margin-bottom:6px"><button class="btn ghost" id="back">← 戻る</button><div class="name">'+chatWith+' さん</div></div><div id="msgs">'+m.map(function(x){return '<div class="bubble '+x[0]+'">'+esc(x[1])+'</div>'}).join('')+'</div><div class="composer"><input id="msg" placeholder="メッセージ" aria-label="メッセージ"><button class="btn" id="send">送信</button></div>';
+    return h;
+  }
+  return '<h2>マッチ</h2><p class="hint">お互いにいいねした人と、1対1でチャット。</p><div class="card"><div class="row" style="align-items:center">'+A('みお')+'<div class="grow"><div class="name">みお</div><div class="meta">ほんとですか！何飲んでました？</div></div><button class="btn" data-chat="みお">開く</button></div></div><div class="note">デモでは、みおさんとのチャットで文字を送る動きを試せます。</div>';
+}
+function plazaV(){
+  return '<h2>広場</h2><p class="hint">このWiFiにいる全員が見られるチャット</p>'+plaza.map(function(p){return '<div class="card"><div class="row">'+A(p[0])+'<div class="grow"><div class="name" style="font-size:14px">'+esc(p[0])+'</div>'+esc(p[2])+'</div></div></div>'}).join('')+'<div class="composer"><input id="pmsg" placeholder="みんなに話しかける…" aria-label="広場に書き込む"><button class="btn" id="psend">送信</button></div>';
+}
+function radar(){
+  var on=radarOn,bl=[['はる',-0.50,-0.46,'約15m','10分前'],['そら',0.52,0.30,'約40m','1時間前'],['みお',0.10,0.72,'約80m','昨日']];
+  var h='<h2>ふれあいレーダー</h2><p class="hint">Bluetoothで、通りすがりの人に気づく。</p>';
+  h+='<div class="rd'+(on?' on':'')+'" role="img" aria-label="近くの人を探すレーダー"><div class="rl l3"></div><div class="rl l2"></div><div class="rl l1"></div><div class="rx"></div><div class="ry"></div>';
+  if(on)h+='<div class="sweep"></div><i class="pu"></i><i class="pu d2"></i><i class="pu d3"></i>';
+  h+='<span class="rs s1">10m</span><span class="rs s2">50m</span><span class="rs s3">100m</span>';
+  if(on)bl.forEach(function(b,i){h+='<div class="bl" style="left:'+(50+b[1]*44)+'%;top:'+(50+b[2]*44)+'%;--d:'+(i*1.2)+'s">'+A(b[0])+'<small>'+b[3]+'</small></div>'});
+  h+='<div class="mine">'+A('あなた')+'</div></div>';
+  h+='<div class="rstat"><span class="rdot'+(on?' on':'')+'"></span>'+(on?'探索中 ・ 近くに3人':'オフ ・ 探していません')+'</div>';
+  h+='<div style="text-align:center;margin:12px 0"><button class="btn big" style="display:inline-block;padding:13px 28px;font-size:15px" id="rtog">'+(on?'レーダーを止める':'レーダーをオンにする')+'</button></div>';
+  h+='<div class="kpis"><div><b>3</b><span>今日</span></div><div><b>11</b><span>今週</span></div><div><b>2</b><span>いいね</span></div></div>';
+  h+='<div class="note">ベータ期間中は、無料で使えます。毎日変わる識別番号で、つきまといを防ぎます。</div>';
+  if(on){h+='<h3 class="pw-h" style="margin-top:6px">ふれあった人</h3>';bl.forEach(function(b){h+='<div class="card"><div class="row" style="align-items:center">'+A(b[0])+'<div class="grow"><div class="name">'+b[0]+'</div><div class="meta">'+b[4]+' ・ '+b[3]+'</div></div><button class="btn ghost" data-like="'+b[0]+'">'+(liked[b[0]]?'♥ 済み':'♡ いいね')+'</button></div></div>'})}
+  else h+='<div class="card" style="text-align:center;color:var(--sub)">オンにすると、近くにいた人がここに並びます。</div>';
+  return h;
+}var premium=false,planSel='y';
+var LOCK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="3"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/><circle cx="12" cy="16" r="1.200" fill="currentColor"/></svg>';
+var CHK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.500l4.500 4.500L19 7"/></svg>';
+var NO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.600" stroke-linecap="round" aria-hidden="true"><path d="M7 12h10"/></svg>';
+function meV(){
+  var h='<h2>自分</h2><div class="card"><div class="row" style="align-items:center">'+A('あなた')+'<div class="grow"><div class="name">あなた</div><div class="chips"><span class="chip">写真</span><span class="chip">映画</span><span class="chip">音楽</span></div></div></div></div>';
+  if(premium)return h+'<div class="banner"><div class="tag">Meetory プレミアム</div><h3 style="margin-top:8px">ご利用中です。ありがとうございます！</h3><p>掲示板への投稿・連絡とレーダーを、ぜんぶ使えます。</p></div>';
+  return h+'<div class="promo"><div class="tag">Meetory プレミアム</div><h3>全国の「行きたい」が、見つかる。</h3><p>掲示板への投稿・連絡とレーダーが使えます。月額200円から。</p><button class="btn" data-pw="1" style="display:inline-block;background:#fff;color:var(--coral);margin-top:10px">くわしく見る</button></div>';
+}
+function lockedBoard(){
+  var fake='';
+  [['テーマパーク','ディズニーに一緒に行ける人！','関東'],['ライブ・フェス','夏フェス、現地で合流したい','全国'],['グルメ','大阪でたこ焼き巡りしませんか','近畿']].forEach(function(x){
+    fake+='<div class="card"><div class="row">'+A(x[2]+x[1])+'<div class="grow"><div class="name" style="font-size:15.5px">'+x[1]+'</div><div class="meta">投稿者</div></div>'+C(x[0],38)+'</div><div class="chips"><span class="chip">'+x[0]+'</span><span class="chip">'+x[2]+'</span><span class="chip">来月</span></div></div>';
+  });
+  return '<div class="banner"><h3>全国掲示板</h3><p>WiFiが同じじゃなくても、全国の人と。「一緒に行きたい人！」を見つけよう。</p></div><div class="lockwrap"><div class="blur" aria-hidden="true">'+fake+'</div><div class="lockcard"><div class="lockic">'+LOCK+'</div><h3>プレミアム限定です</h3><p>掲示板を見る・投稿する・連絡する、すべてプレミアムで使えます。</p><button class="btn" data-pw="1" style="display:block">プレミアムを見る</button><small>月額200円 / 年額1,680円(予定)</small></div></div>';
+}
+function paywall(why){
+  var rows=[['同じWiFiの人と出会う',1,1],['1対1のチャット・写真',1,1],['ふれあいレーダー',0,1],['全国掲示板を見る',1,1],['掲示板に投稿・連絡する',0,1]];
+  var feats=[
+   ['#FF4D6D','#FF9A4A',I.board,'掲示板に投稿・連絡','「ディズニーに行きたい」「フェスで合流したい」。全国の人に募集をかけて、気になる人に連絡できます。見るだけなら無料です。'],
+   ['#8F6BFF','#3DB8FF',I.walk,'ふれあいレーダー','WiFiがなくても、Bluetoothで通りすがりの人に気づけます。あとから一覧で見返せます。'],
+   ['#2BB38A','#7BE0B0',LOCK,'安心のしくみ','毎日変わる識別番号、通報、ブロック。18歳以上の方だけが使えます。']];
+  var y=planSel==='y';
+  var o='<div class="pw" role="dialog" aria-label="Meetory プレミアム"><div class="pw-hero"><button class="pw-x" id="pwx" aria-label="閉じる">&times;</button>'
+   +'<svg class="pw-art" viewBox="0 0 320 190" aria-hidden="true"><defs><linearGradient id="gm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#FFE3EA"/></linearGradient><linearGradient id="gn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF8A4C"/><stop offset="1" stop-color="#FF3D7A"/></linearGradient><radialGradient id="gg" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff" stop-opacity=".7"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>'
+   +'<circle cx="160" cy="95" r="90" fill="url(#gg)"/><circle cx="160" cy="95" r="70" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="1.500"/><circle cx="160" cy="95" r="88" fill="none" stroke="#fff" stroke-opacity=".2" stroke-width="1.500"/>'
+   +'<g transform="translate(160 96)"><path d="M0-58L50-29V29L0 58L-50 29V-29Z" fill="#000" opacity=".12" transform="translate(0 6)"/><path d="M0-58L50-29V29L0 58L-50 29V-29Z" fill="url(#gm)"/><path d="M0-58L50-29L0 0L-50-29Z" fill="#fff" opacity=".7"/><path d="M-50-29L0 0V58L-50 29Z" fill="#FFC2D0" opacity=".55"/>'
+   +'<g fill="none" stroke="url(#gn)" stroke-width="7" stroke-linecap="round"><path d="M-27-8a38 38 0 0 1 54 0"/><path d="M-17 6a24 24 0 0 1 34 0"/></g><circle cx="0" cy="21" r="6.500" fill="url(#gn)"/></g>'
+   +'<g fill="#fff"><path d="M38 40l3 8 8 3-8 3-3 8-3-8-8-3 8-3z"/><path d="M280 52l2.500 6 6 2.500-6 2.500-2.500 6-2.500-6-6-2.500 6-2.500z" opacity=".9"/><path d="M262 140l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" opacity=".8"/><circle cx="60" cy="150" r="3" opacity=".7"/><circle cx="296" cy="102" r="2.500" opacity=".7"/></g>'
+   +'<g><rect x="26" y="84" width="46" height="46" rx="14" fill="#fff" opacity=".95"/><rect x="248" y="84" width="46" height="46" rx="14" fill="#fff" opacity=".95"/></g>'
+   +'<g fill="#FF4D6D" transform="translate(37 95) scale(.92)">'+I.walk.replace('<svg viewBox="0 0 24 24">','<g>').replace('</svg>','</g>')+'</g><g fill="#FF4D6D" transform="translate(259 95) scale(.92)">'+I.board.replace('<svg viewBox="0 0 24 24">','<g>').replace('</svg>','</g>')+'</g></svg>'
+   +'<div class="pw-badge">PREMIUM</div><h2 class="pw-t">全国の「行きたい」を、<br>ひとつの場所に。</h2><p class="pw-s">'+(typeof why==='string'?why:'掲示板への投稿・連絡と、ふれあいレーダーが使えます。')+'</p></div>'
+   +'<div class="pw-body">';
+  feats.forEach(function(f){o+='<div class="feat"><span class="ft" style="background:linear-gradient(135deg,'+f[0]+','+f[1]+')">'+(f[2].indexOf('<svg')===0?f[2]:f[2])+'</span><div><b>'+f[3]+'</b><p>'+f[4]+'</p></div></div>'});
+  o+='<h3 class="pw-h">無料との違い</h3><div class="cmp"><div class="cr ch"><span></span><span>無料</span><span class="pr">プレミアム</span></div>';
+  rows.forEach(function(r){o+='<div class="cr"><span>'+r[0]+'</span><span class="'+(r[1]?'ok':'no')+'">'+(r[1]?CHK:NO)+'</span><span class="ok pr">'+CHK+'</span></div>'});
+  o+='</div><h3 class="pw-h">プランを選ぶ</h3><div class="plans"><button class="pl'+(y?' sel':'')+'" data-pl="y" aria-pressed="'+y+'"><span class="rib">約30%おトク</span><b>年額</b><strong>1,680<small>円</small></strong><em>1か月あたり 約140円</em></button><button class="pl'+(y?'':' sel')+'" data-pl="m" aria-pressed="'+!y+'"><b>月額</b><strong>200<small>円</small></strong><em>自動販売機の飲み物1本ぶん</em></button></div>'
+   +'<p class="legal">価格は予定です。お支払いは Google Play のアカウントに請求されます。定期購入は、期間が終わる24時間前までに解約しない限り、自動で更新されます。解約は Google Play の「定期購入」から、いつでもできます。この画面は見本で、購入はできません。</p></div>'
+   +'<div class="pw-cta"><button class="btn big" id="pwbuy">'+(y?'年額 1,680円で始める':'月額 200円で始める')+'</button><button class="lnk" id="pwres">購入を復元</button></div></div>';
+  $('#over').innerHTML=o;
+  $('#pwx').onclick=function(){$('#over').innerHTML=''};
+  [].forEach.call(document.querySelectorAll('[data-pl]'),function(b){b.onclick=function(){var sc=$('.pw').scrollTop;planSel=b.dataset.pl;paywall();$('.pw').scrollTop=sc}});
+  $('#pwbuy').onclick=function(){premium=true;$('#over').innerHTML='';toast('見本のため、実際の購入はありません。プレミアムを体験できます');render()};
+  $('#pwres').onclick=function(){toast('見本のため、復元はできません')};
+}
+function board(){
+
+  var list=posts.filter(function(p){return !!p.ev===!!bd.ev&&(bd.area==='全国'||p.area==='全国'||p.area===bd.area)&&(bd.cat==='すべて'||p.cat===bd.cat)});
+  var h='<div class="banner"><h3>全国掲示板</h3><p>WiFiが同じじゃなくても、全国の人と。「一緒に行きたい人！」を見つけよう。</p><p style="font-weight:800;font-size:12.5px;margin-top:8px">見るのは無料 / 投稿・連絡はプレミアム</p></div><div class="note">いまは見た目の確認用です。表示は、すべてサンプルです。</div>'+
+  '<div class="seg"><button aria-pressed="'+!bd.ev+'" data-ev="0">仲間募集</button><button aria-pressed="'+!!bd.ev+'" data-ev="1">イベント一覧</button></div>'+
+  '<label for="area" style="margin-top:0">地域</label><select id="area">'+AREAS.map(function(a){return '<option'+(a===bd.area?' selected':'')+'>'+a+'</option>'}).join('')+'</select><div class="filters" style="margin-top:10px">'+CATS.map(function(c){return '<button aria-pressed="'+(c===bd.cat)+'" data-cat="'+c+'">'+c+'</button>'}).join('')+'</div>';
+  if(!list.length)h+='<p class="hint" style="text-align:center;padding:30px 0">この条件の投稿はまだありません。<br>最初の1件を載せてみよう！</p>';
+  if(bd.ev)h+='<div class="note">全国のイベントの日付と場所を、公式の公開情報から毎日自動で集めて載せる予定です(いまはサンプル)。</div>';
+  list.forEach(function(p,i){
+    var pin='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.200 7-11.500A7 7 0 0 0 5 9.500C5 14.800 12 21 12 21z"/><circle cx="12" cy="9.500" r="2.500"/></svg>';
+    if(p.ev){h+='<div class="card"><div class="row"><div class="date"><b style="font-size:'+(/^\d+$/.test(p.m)?'26px':'16px')+'">'+esc(p.m)+'</b><small>'+(/^\d+$/.test(p.m)?'月':'')+'</small></div><div class="grow"><div class="name" style="font-size:16px">'+esc(p.t)+'</div><div style="margin-top:3px"><span class="pin">'+pin+esc(p.area)+'</span> <span class="meta">・ '+esc(p.when)+'</span></div><div class="chips" style="align-items:center">'+C(p.cat,26)+'<span class="chip">'+p.cat+'</span></div></div></div><p style="margin:10px 0 8px;color:var(--sub);font-size:13px">'+esc(p.body)+'</p><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span class="meta">出どころ: 公式の公開情報</span><button class="btn ghost" data-want="'+posts.indexOf(p)+'">'+(p.w?'♥':'♡')+' 行きたい '+p.want+'</button></div></div>';return}
+    h+='<div class="card"><div class="row">'+A(p.nick)+'<div class="grow"><div class="name" style="font-size:15.5px">'+esc(p.t)+'</div><div class="meta">'+esc(p.nick)+'</div></div>'+C(p.cat,38)+'</div><div class="chips"><span class="chip">'+p.cat+'</span><span class="chip">'+p.area+'</span><span class="chip">'+esc(p.when)+'</span><span class="chip">'+p.n+'人まで</span></div><p style="margin:8px 0">'+esc(p.body)+'</p><div style="text-align:right"><button class="btn" data-talk="1">話してみる</button></div></div>';
+  });
+  return h+'<div style="height:60px"></div>';
+}
+function render(){
+  renderNav();
+  var m=$('#main');
+  m.innerHTML=[people,matches,plazaV,radar,meV,board][tab]();
+  var old=$('.fab');if(old)old.remove();
+  if(tab===5){var f=document.createElement('button');f.className='fab';f.textContent=bd.ev?'＋ イベントを載せる':'＋ 仲間を募集する';f.onclick=compose;$('#app').appendChild(f)}
+  bind();
+}
+function bind(){
+  var q=function(s,fn){[].forEach.call(document.querySelectorAll(s),fn)};
+  q('[data-like]',function(b){b.onclick=function(){var n=b.dataset.like;liked[n]=!liked[n];toast(liked[n]?'いいねしました💌':'取り消しました');render()}});
+  q('[data-chat]',function(b){b.onclick=function(){chatWith=b.dataset.chat;render()}});
+  var back=$('#back');if(back)back.onclick=function(){chatWith=null;render()};
+  var send=$('#send');if(send)send.onclick=function(){var i=$('#msg'),t=i.value.trim();if(!t)return;chat[chatWith].push(['me',t]);render();setTimeout(function(){chat[chatWith].push(['you','いいですね！😊']);if(tab===1)render()},900)};
+  var ps=$('#psend');if(ps)ps.onclick=function(){var i=$('#pmsg'),t=i.value.trim();if(!t)return;plaza.push(['自分','🙂',t]);render()};
+  var rt=$('#rtog');if(rt)rt.onclick=function(){radarOn=!radarOn;render()};
+  q('[data-plan]',function(d){d.onclick=function(){plan=d.dataset.plan;render()}});
+  q('[data-pw]',function(b){b.onclick=function(){paywall()}});
+  var buy=$('#buy');if(buy)buy.onclick=function(){toast('見本のため、購入はできません')};
+  q('[data-ev]',function(b){b.onclick=function(){bd.ev=+b.dataset.ev;render()}});
+  q('[data-cat]',function(b){b.onclick=function(){bd.cat=b.dataset.cat;render()}});
+  var a=$('#area');if(a)a.onchange=function(){bd.area=a.value;render()};
+  q('[data-want]',function(b){b.onclick=function(){var p=posts[+b.dataset.want];p.w=!p.w;p.want+=p.w?1:-1;var y=$('#main').scrollTop;render();$('#main').scrollTop=y}});
+  q('[data-talk]',function(b){b.onclick=function(){if(!premium){paywall('掲示板の人に連絡するには、プレミアムが必要です');return}toast('ここから話しかけられるようになります(サンプル)')}});
+}
+function compose(){
+  if(!premium){paywall('掲示板に投稿するには、プレミアムが必要です');return}
+  $('#over').innerHTML='<div class="sheet"><div role="dialog" aria-label="投稿"><h2 style="margin-top:0">'+(bd.ev?'イベントを載せる':'仲間を募集する')+'</h2><label for="ct">タイトル(例: ディズニーに行きたい)</label><input id="ct" maxlength="40"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label for="ca">地域</label><select id="ca">'+AREAS.slice(1).map(function(x){return '<option>'+x+'</option>'}).join('')+'</select></div><div><label for="cc">カテゴリ</label><select id="cc">'+CATS.slice(1).map(function(x){return '<option>'+x+'</option>'}).join('')+'</select></div></div><label for="cw">いつ</label><input id="cw" placeholder="例: 来月の週末">'+(bd.ev?'':'<label for="cn">何人まで</label><select id="cn">'+[1,2,3,4,5,6,7,8,9,10].map(function(n){return '<option'+(n===2?' selected':'')+'>'+n+'</option>'}).join('')+'</select>')+'<label for="cb">ひとこと</label><textarea id="cb" rows="3" maxlength="200"></textarea><div class="note" style="margin-top:12px">電話番号・LINE・住所などは書かないでください。会うときは、昼間の人が多い場所で。18歳以上の方のみ。</div><div style="display:flex;gap:10px"><button class="btn ghost" id="cx" style="flex:1">やめる</button><button class="btn" id="cs" style="flex:2">投稿する</button></div></div></div>';
+  $('#cx').onclick=function(){$('#over').innerHTML=''};
+  $('#cs').onclick=function(){var t=$('#ct').value.trim();if(!t){toast('タイトルを入れてください');return}
+    var p={ev:bd.ev,cat:$('#cc').value,t:t,area:$('#ca').value,when:$('#cw').value.trim()||'いつでも',body:$('#cb').value.trim(),nick:'自分',em:'🙂'};
+    if(bd.ev)p.want=0;else p.n=+$('#cn').value;posts.unshift(p);$('#over').innerHTML='';toast('投稿しました(見本の中だけ)');render()};
+  $('#ct').focus();
+}
+render();
+function opening(){
+  var o=document.getElementById('open');if(o)o.remove();
+  o=document.createElement('div');o.id='open';
+  var lg=document.querySelector('.logo').innerHTML;
+  o.innerHTML='<div class="sp"><div class="sl">'+lg+'</div><div class="st">Meet<b>ory</b></div><div class="ss">同じWiFiの人と、つながろう。</div></div>';
+  document.getElementById('app').appendChild(o);
+  var ps=o.querySelectorAll('.sl g[fill="none"] path'),dot=o.querySelector('.sl circle[r="38"]');
+  for(var k=0;k<ps.length;k++)ps[k].setAttribute('class','arc a'+k);
+  if(dot)dot.setAttribute('class','dotc');
+  var T=setTimeout(intro,2900);
+  o.onclick=function(){clearTimeout(T);intro()};
+  var pages=[['📡','同じWiFiの人が見つかる','アプリを入れた人どうしが、同じWiFiにいるときだけ、お互いを見つけられます。共通の趣味が多い人から順に表示されます。'],['💞','いいねして、マッチ','お互いにいいねすると「マッチ」。マッチした人とだけ、1対1でチャットや写真を送り合えます。広場では、みんなと話せます。'],['💎','プレミアムで、もっと広がる','無料でも、近くの人とのマッチやチャット、全国の掲示板を見ることができます。プレミアムでは、WiFiがなくても近くの人に気づける「レーダー」と、掲示板への投稿・連絡が使えます。月額200円・年額1,680円の予定です。','今は無料のベータ版です。'],['🛡️','安心して使うために','サーバーは使わず、データはあなたのスマホの中だけ。不快な相手は、通報・ブロックできます。18歳以上の方のみご利用いただけます。']];
+  var i=0;
+  function intro(){
+    o.onclick=null;
+    function draw(){
+      o.innerHTML='<div class="in"><div class="inx"><button class="lnk" id="osk" style="margin:0">スキップ</button></div><div class="inb"><div class="ie">'+pages[i][0]+'</div><h2>'+pages[i][1]+'</h2><p>'+pages[i][2]+'</p>'+(pages[i][3]?'<span class="tag" style="margin-top:14px;background:var(--coral);color:#fff">'+pages[i][3]+'</span>':'')+'</div><div class="idots">'+pages.map(function(_,k){return '<i'+(k===i?' class="on"':'')+'></i>'}).join('')+'</div><div style="padding:0 24px 24px"><button class="btn big" id="onx">'+(i===pages.length-1?'はじめる':'次へ')+'</button></div></div>';
+      document.getElementById('osk').onclick=close;
+      document.getElementById('onx').onclick=function(){if(i===pages.length-1)close();else{i++;draw()}};
+    }
+    function close(){o.classList.add('out');setTimeout(function(){o.remove()},400)}
+    draw();
+  }
+}
+document.querySelector('.logo').style.cursor='pointer';
+document.querySelector('.logo').title='オープニングをもう一度見る';
+document.querySelector('.logo').onclick=opening;
+opening();
+</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap">
+<style>
+/* ===== ドットの かわいい見た目 (上書き) ===== */
+html:root:root:root{--bg:#1B1030;--card:#2B1A4D;--ink:#FFF4FF;--sub:#BBA8DD;--line:#4A2F7E;--coral:#FF5CC8;--orange:#FFC93C;--chip:#3A2565;--note:#43310F;--ok:#4DFFB0;--okbg:#12403A;--grad:linear-gradient(135deg,#FF5CC8,#9B5CFF);color-scheme:dark}
+body{background-color:var(--bg);background-image:radial-gradient(rgba(255,255,255,.07) 1px,transparent 1.6px);background-size:16px 16px}
+h1,h2,h3,.btn,.name,.pw-t,.pw-h,.st,nav button,.date b,.tag,.rib,.pl strong,.pl b,.kpis b,.seg button,.lockcard h3,.banner h3,.promo h3{font-family:"DotGothic16","Noto Sans JP",system-ui,sans-serif}
+h1{font-size:22px;letter-spacing:1px}
+.card,.feat,.cmp,.pl,.lockcard{border:3px solid var(--line);border-radius:10px;box-shadow:0 5px 0 #0E0620}
+.card{background:var(--card)}
+.pl.sel{border-color:#FFC93C;box-shadow:0 5px 0 #8A6A00}
+.btn{border-radius:8px;box-shadow:0 4px 0 #7A2A9A,inset 0 2px 0 rgba(255,255,255,.4);transition:none}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #7A2A9A}
+.btn.ghost{box-shadow:none;border:2px solid var(--coral);background:transparent;color:var(--coral)}
+.btn.on{background:var(--coral);color:#fff}
+.btn.big{display:block;width:100%;box-sizing:border-box;box-shadow:0 5px 0 #7A2A9A,inset 0 2px 0 rgba(255,255,255,.4)}
+.chip{border-radius:6px;background:var(--chip)}
+.chip.hit{background:#FFC93C;color:#3A2565}
+.banner,.promo{position:relative;border-radius:12px;border:3px solid rgba(255,255,255,.35);box-shadow:0 5px 0 #0E0620;background:linear-gradient(135deg,#FF5CC8,#9B5CFF 70%,#5B7BFF)}
+.promo:after{display:none}
+.banner:before,.promo:before{content:"";position:absolute;right:10px;top:10px;width:52px;height:52px;background:var(--gemurl) center/contain no-repeat;image-rendering:pixelated;animation:fl 1.6s steps(2) infinite}
+.banner h3,.promo h3,.banner p,.promo p{padding-right:48px}
+.banner:before,.promo:before{width:40px;height:40px}
+@keyframes fl{0%{transform:translateY(0)}50%{transform:translateY(-4px)}100%{transform:translateY(0)}}
+.date{border-radius:8px;box-shadow:0 4px 0 #7A2A9A;background:var(--grad)}
+.av{border-radius:12px!important;border:3px solid #fff;box-shadow:0 3px 0 #0E0620!important;background:#3A2565}
+.av svg{image-rendering:pixelated}
+.logo{border-radius:9px;background:linear-gradient(135deg,#FF5CC8,#5B3DFF);box-shadow:0 3px 0 #0E0620}
+.logo svg{image-rendering:pixelated}
+.live{border-radius:6px;font-family:"DotGothic16","Noto Sans JP",sans-serif}
+nav{background:#150C28;border-top:3px solid var(--line)}
+nav button svg{width:24px;height:24px;shape-rendering:crispEdges}
+nav button[aria-selected="true"]{color:#FFC93C}
+nav button[aria-selected="true"] svg{animation:fl 1s steps(2) infinite}
+.seg,.filters button,select,input,textarea{border-radius:8px}
+.seg{border:3px solid var(--line)}
+.bubble{border-radius:10px}
+.me{background:var(--grad)}
+.you{background:var(--card);border:2px solid var(--line)}
+.toast{border-radius:8px;border:2px solid #fff3}
+.lockic,.feat .ft{border-radius:10px}
+.pw-hero{background:linear-gradient(165deg,#2A1260 0%,#6A2FC8 55%,#FF5CC8 100%)}
+.pw-body{border-radius:16px 16px 0 0}
+.pw-art .fl{animation:fl 1.8s steps(2) infinite}
+.pw-art .fl2{animation:fl 1.8s steps(2) .9s infinite}
+.cr .pr{background:rgba(255,92,200,.14)}
+.rd{border-radius:50%;background:repeating-linear-gradient(0deg,rgba(255,255,255,.05) 0 1px,transparent 1px 12px),repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 1px,transparent 1px 12px),radial-gradient(circle at 50% 45%,#3A1B7A 0%,#22104A 55%,#150A2E 100%);border:3px solid #6A4BB0}
+.bl .av{width:34px;height:34px;border:2px solid #fff;border-radius:8px!important}
+.mine .av{width:44px;height:44px;border:3px solid #FFC93C}
+.mine:after{border-radius:12px}
+.sweep{background:conic-gradient(from 0deg,rgba(77,255,176,0) 0deg,rgba(77,255,176,0) 250deg,rgba(77,255,176,.35) 358deg,rgba(200,255,230,.9) 360deg)}
+.pu{border-color:rgba(77,255,176,.7)}
+.rstat .rdot{border-radius:2px}
+#open{background:linear-gradient(180deg,#2A1260,#14082B);overflow:hidden}
+#open .sp{color:#fff;position:relative;z-index:1}
+#open .sl{width:150px;height:150px;border-radius:26px;background:linear-gradient(135deg,#FF5CC8,#5B3DFF);padding:10px;animation:none;box-shadow:0 8px 0 #0E0620}
+#open .sl svg{image-rendering:pixelated}
+#open .sl rect{opacity:0;animation:pxin .01s linear forwards}
+#open .st{font-family:"DotGothic16","Noto Sans JP",sans-serif;font-size:38px;color:#fff;letter-spacing:2px}
+#open .st b{color:#FF5CC8}
+#open .ss{color:#E6D8FF;--o:.85}
+@keyframes pxin{to{opacity:1}}
+.in{color:#FFF4FF;position:relative;z-index:1}
+.inb p{color:#BBA8DD}
+.inb h2{font-family:"DotGothic16","Noto Sans JP",sans-serif}
+.ie svg{width:96px;height:96px;image-rendering:pixelated;animation:fl 1.6s steps(2) infinite}
+.idots i{background:#4A2F7E;border-radius:2px}.idots i.on{background:#FF5CC8}
+.stars{position:absolute;inset:0;pointer-events:none}
+.stars i{position:absolute;width:6px;height:6px;background:#fff;animation:tw 1.6s steps(2) infinite}
+@keyframes tw{0%{opacity:.15}50%{opacity:1}100%{opacity:.15}}
+</style>
+<script>
+(function(){
+var PAL={y:'#FFC93C',Y:'#E8890C',w:'#FFFFFF',r:'#FF4D8D',R:'#C22A66',c:'#3DDCFF',C:'#1BA3D6',g:'#9B5CFF',G:'#6B2FD0',o:'#FF9A3C',k:'#2B1646',n:'#FF8AD8',N:'#D63FAE',b:'#5B7BFF',B:'#3A4ACF',m:'#FF3D9A',s:'#BBA8DD',e:'#4DFFB0',E:'#1FB57A'};
+function SP(rows,pal,attr,mono){
+  pal=pal||PAL;var w=rows[0].length,h=rows.length,o='<svg viewBox="0 0 '+w+' '+h+'" shape-rendering="crispEdges" aria-hidden="true" '+(attr||'')+'>';
+  for(var y=0;y<h;y++){var x=0;while(x<w){var ch=rows[y][x];if(ch==='.'||ch===' '){x++;continue}var x2=x;while(x2+1<w&&rows[y][x2+1]===ch)x2++;var col=mono?'currentColor':(pal[ch]||'#fff');o+='<rect x="'+x+'" y="'+y+'" width="'+(x2-x+1)+'" height="1" fill="'+col+'"/>';x=x2+1}}
+  return o+'</svg>';
+}
+window.SP=SP;
+var S={
+ heart:['.rr..rr.','rwrrrrrR','rrrrrrrR','rrrrrrRR','.rrrrRR.','..rrRR..','...rR...','........'],
+ gemc:['..cccc..','.cwwccC.','cwcccccC','cccccccC','.ccccCC.','..cCCC..','...CC...','........'],
+ gemp:['..nnnn..','.nwwnnN.','nwnnnnnN','nnnnnnnN','.nnnnNN.','..nNNN..','...NN...','........'],
+ coin:['..YYYY..','.YyyyyY.','YyywyyyY','Yyywyyyy'.slice(0,7)+'Y','YyyyyyyY','YyyyyyyY','.YyyyyY.','..YYYY..'].slice(0,8),
+ star:['..w..','..w..','wwwww','..w..','..w..'],
+ note:['...kkkkk'.replace(/k/g,'g'),'...gwwwg','...g...g','...g...g','gggg.ggg','gggg.ggg','.gg...g.','........'],
+ mic:['..gggg..','.gwgggG.','.ggggGG.','.gggggG.','g.gggg.g','.gggGGG.','...gg...','..gggg..'],
+ plane:['......bb','.....bbb','bb..bbbb','.bbbbbbB','..bbbbBB','...bbBB.','....bB..','........'],
+ ramen:['..s..s..','...s..s.','........','oooooooo','owwwwwwo','.owwwwo.','..oooo..','..o..o..'],
+ ball:['..kkkk..','.kwwwwk.','kwwkkwwk','kwkwwkwk','kwkwwkwk','kwwkkwwk','.kwwwwk.','..kkkk..'],
+ shield:['bbbbbbbb','bwwbbbbB','bwbbbbbB','bbbbbbbB','.bbbbbbB','.bbbbBB.','..bBBB..','...BB...'],
+ radar:['..cccc..','.c....c.','c..cc..c','c.cwwc.c','c.cwwc.c','c..cc..c','.c....c.','..cccc..'],
+ smile:['..cccc..','.c....c.','c.c..c.c','c......c','c.c..c.c','.c.cc.c.','..cccc..','........'],
+ hrt:['.cc..cc.','cccccccc','cccccccc','cccccccc','.cccccc.','..cccc..','...cc...','........'],
+ chat:['.cccccc.','cccccccc','cccccccc','cccccccc','.cccccc.','..ccc...','..cc....','........'],
+ rad:['..cccc..','.c....c.','c..cc..c','c.cccc.c','c.cccc.c','c..cc..c','.c....c.','..cccc..'],
+ me:['..cccc..','.cccccc.','.cccccc.','..cccc..','cccccccc','cccccccc','cccccccc','........'],
+ brd:['cccccccc','c......c','c.cccc.c','c......c','c.cccc.c','cccccccc','..cc....','..cc....'],
+ lock:['..cccc..','.c....c.','.c....c.','cccccccc','cccddccc','cccddccc','cccccccc','........'],
+ logo:['................','..wwwwwwwwwwww..','.wwwwwwwwwwwwww.','wwwwwwwwwwwwwwww','wwwwwmmmmmmwwwww','wwwmmwwwwwwmmwww','wwwwwwmmmmwwwwww','wwwwwmwwwwmwwwww','wwwwwwwwwwwwwwww','wwwwwwwmmwwwwwww','wwwwwwwmmwwwwwww','wwwwwwwwwwwwwwww','.wwwwwwwwwwwwww.','..wwwwwwwwwwww..','..www...........','..w.............']
+};
+S.coin=['..YYYY..','.YyyyyY.','YyywyyyY','YyywyyyY','YyyyyyyY','YyyyyyyY','.YyyyyY.','..YYYY..'];
+S.note=['...ggggg','...gwwwg','...g...g','...g...g','gggg.ggg','gggg.ggg','.gg...g.','........'];
+S.lock=['..cccc..','.c....c.','.c....c.','cccccccc','ccc..ccc','ccc..ccc','cccccccc','........'];
+var gemurl='url("data:image/svg+xml,'+encodeURIComponent(SP(S.gemc,PAL,'xmlns="http://www.w3.org/2000/svg"'))+'")';
+document.documentElement.style.setProperty('--gemurl',gemurl);
+/* ---- ナビのアイコン ---- */
+var M=function(k){return SP(S[k],PAL,'',true)};
+I.people=M('smile');I.heart=M('hrt');I.forum=M('chat');I.walk=M('rad');I.me=M('me');I.board=M('brd');
+window.LOCK=SP(S.lock,PAL,'width="26" height="26"',true);
+/* ---- ロゴ ---- */
+function logoSvg(){return SP(S.logo,PAL)}
+window.logoSvg=logoSvg;
+document.querySelector('.logo').innerHTML=logoSvg();
+document.querySelector('h1').innerHTML='Meet<b>ory</b>';
+/* ---- 顔のドット絵 ---- */
+window.A=function(n){
+  var h=0,i;for(i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))>>>0;
+  var bgs=['#FF9ED8','#8FD3FF','#C8A2FF','#FFE38A','#9BF0C8'],hairs=['#2B1646','#6B3E26','#E8A23C','#4B5CFF','#D6336C','#C9C2E8'],skins=['#FFE0C8','#FFD0B0','#F2B890','#D9966E'],tops=['#FF5CC8','#5B7BFF','#2FD6A0','#FFC93C','#9B5CFF','#2B1646'];
+  var bg=bgs[h%5],hc=hairs[(h>>>3)%6],sk=skins[(h>>>6)%4],st=(h>>>9)%5,ac=(h>>>12)%5,tp=tops[(h>>>14)%6],mo=(h>>>17)%3,ic=['#9B5CFF','#3DB8FF','#FF5CC8','#2FD6A0'][(h>>>19)%4];
+  var g=[],x,y;for(y=0;y<16;y++){g[y]=[];for(x=0;x<16;x++)g[y][x]=bg}
+  function P(x,y,c){if(x>=0&&x<16&&y>=0&&y<16)g[y][x]=c}
+  function R(x0,y0,x1,y1,c){for(var yy=y0;yy<=y1;yy++)for(var xx=x0;xx<=x1;xx++)P(xx,yy,c)}
+  P(1,1,'#fff');P(14,2,'#fff');P(13,13,'#ffffff88'.slice(0,7));
+  var dk='#2B1646';
+  if(st===3)R(1,3,14,14,hc);if(st===2){R(0,5,1,11,hc);R(14,5,15,11,hc)}if(st===0)R(1,3,14,11,hc);
+  var head=[[4,11],[3,12],[2,13],[2,13],[2,13],[2,13],[2,13],[2,13],[3,12],[4,11]];
+  for(i=0;i<head.length;i++)R(head[i][0],3+i,head[i][1],3+i,sk);
+  R(5,13,10,13,tp);R(3,14,12,14,tp);R(2,15,13,15,tp);P(7,13,'#fff');P(8,13,'#fff');
+  if(st===3){R(1,13,2,15,hc);R(13,13,14,15,hc)}
+  /* hair front */
+  R(5,2,10,2,hc);R(4,3,11,3,hc);R(3,4,12,4,hc);
+  if(st===1){R(2,5,13,5,hc);P(2,6,hc);P(13,6,hc);P(2,7,hc);P(13,7,hc)}
+  else{R(2,5,13,5,hc);R(2,6,3,6,hc);P(5,6,hc);P(8,6,hc);P(10,6,hc);R(12,6,13,6,hc);R(2,7,2,9,hc);R(13,7,13,9,hc)}
+  if(st===4){P(7,1,hc);P(8,0,hc);P(8,1,hc)}
+  P(6,3,'#ffffff55'.slice(0,7)==='#ffffff'?'#fff':'#fff');P(7,3,'#fff');
+  /* eyes */
+  var gl=(ac===3);
+  [[4,5],[10,11]].forEach(function(e){R(e[0],7,e[1],7,dk);P(e[0],8,'#fff');P(e[1],8,dk);R(e[0],9,e[1],9,ic)});
+  if(!gl){P(3,10,'#FF8FB8');P(4,10,'#FF8FB8');P(11,10,'#FF8FB8');P(12,10,'#FF8FB8')}
+  if(mo===0){P(7,11,'#C23A6E');P(8,11,'#C23A6E');P(7,12,'#FF8FA3');P(8,12,'#FF8FA3')}
+  else if(mo===1){P(7,11,'#C23A6E');P(8,11,'#C23A6E')}
+  else{P(6,11,'#C23A6E');P(9,11,'#C23A6E');P(7,12,'#C23A6E');P(8,12,'#C23A6E')}
+  /* accessories */
+  if(ac===1){R(3,0,4,2,hc);P(4,1,'#FF8AD8');R(11,0,12,2,hc);P(11,1,'#FF8AD8')}
+  if(ac===2){R(1,6,2,10,'#FF5CC8');R(13,6,14,10,'#FF5CC8');R(2,3,2,5,dk);R(13,3,13,5,dk);R(3,2,12,2,dk)}
+  if(ac===3){var gc='#FFC93C';R(3,6,6,6,gc);R(3,10,6,10,gc);R(3,7,3,9,gc);R(6,7,6,9,gc);R(9,6,12,6,gc);R(9,10,12,10,gc);R(9,7,9,9,gc);R(12,7,12,9,gc);P(7,8,gc);P(8,8,gc)}
+  if(ac===4){R(11,2,14,4,'#FF3D9A');P(12,3,'#fff');P(10,3,'#FF3D9A');P(15,3,'#FF3D9A')}
+  var o='<div class="av"><svg viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true">';
+  for(y=0;y<16;y++){x=0;while(x<16){var c=g[y][x],x2=x;while(x2+1<16&&g[y][x2+1]===c)x2++;o+='<rect x="'+x+'" y="'+y+'" width="'+(x2-x+1)+'" height="1" fill="'+c+'"/>';x=x2+1}}
+  return o+'</svg></div>';
+};
+/* ---- カテゴリの絵 ---- */
+var CK={'テーマパーク':['star','#9B5CFF','#FF5CC8'],'ライブ・フェス':['mic','#FF5CC8','#FF9A3C'],'旅行':['plane','#3DB8FF','#5B7BFF'],'グルメ':['ramen','#FF9A3C','#FF4D8D'],'スポーツ':['ball','#2FD6A0','#1FB57A'],'趣味・その他':['note','#9B5CFF','#3DB8FF']};
+var SS={star:['...yy...','...yy...','yyyyyyyy','.yyyyyy.','..yyyy..','..yyyy..','.yy..yy.','.y....y.'],mic:S.mic,plane:S.plane,ramen:S.ramen,ball:S.ball,note:S.note};
+SS.mic=['..wwww..','.wwwwwG.','.wwwwwG.','.wwwwwG.','w.wwww.w','.wwwwG..','...ww...','..wwww..'];
+SS.plane=['......ww','.....www','ww..wwww','.wwwwwww','..wwwwww','...wwww.','....ww..','........'];
+SS.note=['...wwwww','...w...w','...w...w','...w...w','www.www.','www.www.','.w...w..','........'];
+window.C=function(cat,sz){var c=CK[cat]||CK['趣味・その他'];sz=sz||38;
+  var rows=SS[c[0]];var pal={y:'#fff',w:'#fff',k:'#2B1646',o:'#FFE9A8',s:'#fff',G:'#ffffff'};
+  var sp=SP(rows,pal,'style="width:70%;height:70%"');
+  return '<span class="ci" style="width:'+sz+'px;height:'+sz+'px;background:linear-gradient(135deg,'+c[1]+','+c[2]+');border:2px solid #fff6;border-radius:8px">'+sp+'</span>'};
+/* ---- 有料画面のイラスト ---- */
+var _pw=window.paywall;
+window.paywall=function(w){
+  _pw(w);
+  var art=document.querySelector('.pw-art');if(!art)return;
+  function at(k,x,y,s,cls,pal){return '<g class="'+(cls||'')+'">'+SP(S[k],pal||PAL,'x="'+x+'" y="'+y+'" width="'+s+'" height="'+s+'"')+'</g>'}
+  var sc='<svg class="pw-art" viewBox="0 0 320 190" aria-hidden="true" style="image-rendering:pixelated">'
+   +'<defs><linearGradient id="tg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF5CC8"/><stop offset="1" stop-color="#5B3DFF"/></linearGradient></defs>'
+   +'<g class="fl"><rect x="96" y="22" width="128" height="128" rx="26" fill="#0E0620" opacity=".5" transform="translate(0 6)"/><rect x="96" y="22" width="128" height="128" rx="26" fill="url(#tg)" stroke="#fff" stroke-opacity=".6" stroke-width="3"/>'+SP(S.logo,PAL,'x="108" y="34" width="104" height="104"')+'</g>'
+   +at('gemc',18,36,44,'fl')+at('gemp',258,40,44,'fl2')+at('coin',34,112,36,'fl2')+at('coin',250,112,36,'fl')
+   +at('heart',66,70,28,'fl')+at('heart',226,76,28,'fl2')
+   +at('star',22,12,12,'fl2',{w:'#fff'})+at('star',286,16,14,'fl',{w:'#fff'})+at('star',150,6,10,'fl2',{w:'#FFC93C'}.constructor===Object?{w:'#FFC93C'}:PAL)+at('star',292,150,12,'fl2',{w:'#fff'})+at('star',16,156,10,'fl',{w:'#fff'})
+   +'</svg>';
+  art.outerHTML=sc;
+};
+/* ---- オープニング ---- */
+window.opening=function(){
+  var o=document.getElementById('open');if(o)o.remove();
+  o=document.createElement('div');o.id='open';
+  var stars='';for(var i=0;i<26;i++){stars+='<i style="left:'+((i*37+11)%97)+'%;top:'+((i*53+7)%95)+'%;animation-delay:'+((i%7)*.23)+'s"></i>'}
+  o.innerHTML='<div class="stars">'+stars+'</div><div class="sp"><div class="sl">'+logoSvg()+'</div><div class="st">Meet<b>ory</b></div><div class="ss">同じWiFiの人と、つながろう。</div></div>';
+  document.getElementById('app').appendChild(o);
+  [].forEach.call(o.querySelectorAll('.sl rect'),function(r){var yy=+r.getAttribute('y');r.style.animationDelay=(.15+yy*.07)+'s'});
+  var T=setTimeout(intro,2900);o.onclick=function(){clearTimeout(T);intro()};
+  var pages=[['radar','同じWiFiの人が見つかる','アプリを入れた人どうしが、同じWiFiにいるときだけ、お互いを見つけられます。共通の趣味が多い人から順に表示されます。',0],['heart','いいねして、マッチ','お互いにいいねすると「マッチ」。マッチした人とだけ、1対1でチャットや写真を送り合えます。広場では、みんなと話せます。',0],['gemc','プレミアムで、もっと広がる','無料でも、近くの人とのマッチやチャット、全国の掲示板を見ることができます。プレミアムでは、WiFiがなくても近くの人に気づける「レーダー」と、掲示板への投稿・連絡が使えます。月額200円・年額1,680円の予定です。','今は無料のベータ版です'],['shield','安心して使うために','サーバーは使わず、データはあなたのスマホの中だけ。不快な相手は、通報・ブロックできます。18歳以上の方のみご利用いただけます。',0]];
+  var idx=0;
+  function intro(){
+    o.onclick=null;
+    function draw(){
+      o.innerHTML='<div class="stars">'+stars+'</div><div class="in"><div class="inx"><button class="lnk" id="osk" style="margin:0">スキップ</button></div><div class="inb"><div class="ie">'+SP(S[pages[idx][0]],PAL)+'</div><h2>'+pages[idx][1]+'</h2><p>'+pages[idx][2]+'</p>'+(pages[idx][3]?'<span class="tag" style="margin-top:14px;background:var(--coral);color:#fff">'+pages[idx][3]+'</span>':'')+'</div><div class="idots">'+pages.map(function(_,k){return '<i'+(k===idx?' class="on"':'')+'></i>'}).join('')+'</div><div style="padding:0 24px 24px"><button class="btn big" id="onx">'+(idx===pages.length-1?'はじめる':'次へ')+'</button></div></div>';
+      document.getElementById('osk').onclick=close;
+      document.getElementById('onx').onclick=function(){if(idx===pages.length-1)close();else{idx++;draw()}};
+    }
+    function close(){o.classList.add('out');setTimeout(function(){o.remove()},400)}
+    draw();
+  }
+};
+document.querySelector('.logo').onclick=window.opening;
+render();
+window.opening();
+})();
+</script>
