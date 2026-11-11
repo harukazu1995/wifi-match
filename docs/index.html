@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex"><meta name="theme-color" content="#0B0B0D">
+<html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex"><meta name="theme-color" content="#121212">
 <title>Meetory 見本</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
@@ -594,6 +594,100 @@ window.opening=function(){
     draw();
   }
 };
+document.querySelector('.logo').onclick=window.opening;
+render();
+window.opening();
+})();
+</script>
+<style>
+/* ===== さらに控えめ (上書き): 光や金のかがやきをなくし、シャンパン色を細いアクセントだけに ===== */
+html:root:root:root{--bg:#121212;--card:#1A1A1A;--ink:#ECE8E1;--sub:#9A958B;--line:#2A2A2A;--coral:#BFA77A;--orange:#D8C7A4;--chip:#1A1A1A;--note:#1A1A1A;--ok:#8FB89B;--okbg:#17201A;--grad:#BFA77A;--gold:#BFA77A;--goldl:#D8C7A4;--goldd:#4A4436}
+body{background:#121212;letter-spacing:.01em}
+h2,h3,.pw-t,.pw-h,.name,.banner h3,.promo h3,.lockcard h3,.inb h2{font-family:"Noto Sans JP",system-ui,sans-serif;font-weight:600}
+h1{font-size:23px;letter-spacing:.12em;font-weight:500}
+h1 b{color:var(--goldl)}
+h2{font-size:21px;letter-spacing:.02em}
+.card,.feat,.cmp,.lockcard{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:none}
+.btn{background:#BFA77A;color:#151515;font-weight:600;letter-spacing:.04em;box-shadow:none}
+.btn.ghost{background:transparent;border:1px solid #5A5242;color:var(--goldl)}
+.btn.on{background:#BFA77A;color:#151515}
+.btn.big{box-shadow:none;font-size:15px}
+.chip{border:1px solid #333;color:var(--sub)}
+.chip.hit{background:#2A261D;border-color:#5A5242;color:var(--goldl);font-weight:500}
+.banner,.promo{background:var(--card);border:1px solid var(--line);box-shadow:none;border-radius:14px}
+.banner:after{display:none}
+.banner h3,.promo h3{color:var(--ink);letter-spacing:.02em}
+.banner p,.promo p{color:#BDB8AE}
+.tag{border:1px solid #5A5242;color:var(--goldl);letter-spacing:.1em;font-weight:500}
+.promo .btn{background:#BFA77A!important;color:#151515!important}
+.date{background:var(--card);border:1px solid #333;color:var(--ink);box-shadow:none}
+.date b{color:var(--ink);font-weight:500}
+.av{border:1px solid #4A4436;box-shadow:0 0 0 2px #121212!important}
+.logo{box-shadow:0 0 0 1px #3A362C}
+.live{border:1px solid #333;color:var(--goldl)}
+nav{border-top:1px solid var(--line);background:#121212}
+nav button[aria-selected="true"]{color:var(--goldl)}
+nav button[aria-selected="true"] svg{filter:none}
+.dot{background:#BFA77A;color:#151515}
+.seg{border:1px solid #333}
+.seg button[aria-pressed="true"]{background:#BFA77A;color:#151515}
+.filters button[aria-pressed="true"]{background:#2A261D;border-color:#5A5242;color:var(--goldl)}
+.note{background:#1A1A1A;border:1px solid var(--line);color:#BDB8AE}
+.me{background:#BFA77A;color:#151515}
+.toast{background:#ECE8E1;color:#151515;border:0}
+.fab{background:#BFA77A;color:#151515;box-shadow:0 6px 16px rgba(0,0,0,.5)}
+.lockic{background:#2A261D;color:var(--goldl);box-shadow:none;border:1px solid #5A5242}
+.ci{border:1px solid #333}
+.ci svg{stroke:var(--goldl);stroke-width:1.2}
+.pw-hero{background:#151515;border-bottom:1px solid var(--line)}
+.pw-badge{border:1px solid #5A5242;color:var(--goldl);letter-spacing:.24em;font-weight:500}
+.pw-t{font-size:23px;letter-spacing:.02em}
+.pw-body{border-top:0;background:var(--bg)}
+.feat .ft{background:transparent!important;border:1px solid #3A362C}
+.cr .pr{background:rgba(191,167,122,.07)}
+.pl{border:1px solid #333}
+.pl.sel{border-color:#BFA77A;box-shadow:none}
+.pl strong{font-weight:500}
+.pl.sel strong{color:var(--goldl)}
+.rib{background:#BFA77A;color:#151515}
+.rd,.rd.on{background:#151515;border:1px solid #333;box-shadow:none}
+.rl{border:1px solid rgba(191,167,122,.22)}
+.rx,.ry{background:rgba(191,167,122,.1)}
+.rs{color:rgba(216,199,164,.55)}
+.sweep{background:conic-gradient(from 0deg,rgba(191,167,122,0) 0deg,rgba(191,167,122,0) 270deg,rgba(191,167,122,.16) 358deg,rgba(216,199,164,.7) 360deg)}
+.pu{border:1px solid rgba(216,199,164,.4)}
+.bl:before,.mine:before{display:none}
+.bl .av,.mine .av{border:1px solid #6A604A}
+.mine:after{border:1px solid rgba(216,199,164,.4)}
+.rdot.on{background:#BFA77A;box-shadow:none}
+.kpis div{border:1px solid var(--line);background:var(--card)}
+.kpis b{color:var(--ink);font-weight:500}
+#open{background:#121212}
+#open .sl{box-shadow:0 0 0 1px #3A362C;width:112px;height:112px;border-radius:26px}
+#open .ln{display:none}
+#open .st{font-size:36px;letter-spacing:.18em;margin-left:.18em;font-weight:500}
+#open .st b{color:var(--goldl)}
+#open .ss{letter-spacing:.2em;font-size:12px}
+.inb h2{color:var(--ink);letter-spacing:.02em}
+.ie svg{width:72px;height:72px;stroke:#BFA77A!important}
+.ie svg circle[fill]{fill:#BFA77A}
+.idots i{background:#2A2A2A}.idots i.on{background:#BFA77A}
+</style>
+<script>
+(function(){
+var C1='#BFA77A';
+function calmLogo(){return '<svg viewBox="0 0 1024 1024" aria-label="Meetory"><rect width="1024" height="1024" rx="230" fill="#1A1A1A"/><path d="M150 410A200 200 0 0 1 350 210H674A200 200 0 0 1 874 410V530A200 200 0 0 1 674 730H450L260 880L320 730H350A200 200 0 0 1 150 530Z" fill="none" stroke="'+C1+'" stroke-width="22" stroke-linejoin="round"/><g fill="none" stroke="'+C1+'" stroke-width="38" stroke-linecap="round"><path d="M462.5 470.5A70 70 0 0 1 561.500 470.5"/><path d="M416.500 424.500A135 135 0 0 1 607.500 424.500"/><path d="M370.600 378.600A200 200 0 0 1 653.400 378.600"/></g><circle cx="512" cy="520" r="38" fill="'+C1+'"/></svg>'}
+window.logoSvg=calmLogo;
+document.querySelector('.logo').innerHTML=calmLogo();
+var _A=window.A;window.A=function(n){return _A(n).replace(/#D4AF37/g,'#B59B6E').replace(/#F1D88A/g,'#D8C7A4')};
+var _pw=window.paywall;
+window.paywall=function(w){
+  _pw(w);
+  var art=document.querySelector('.pw-art');if(!art)return;
+  art.outerHTML='<svg class="pw-art" viewBox="0 0 320 130" aria-hidden="true" style="max-width:260px"><g fill="none" stroke="'+C1+'" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="M122 36H198L226 64L160 118L94 64Z"/><path d="M94 64H226M122 36L140 64L160 118M198 36L180 64L160 118M160 36L140 64M160 36L180 64" opacity=".7"/></g></svg>';
+};
+var _op=window.opening;
+window.opening=function(){_op();var s=document.querySelector('#open .sl');if(s)s.innerHTML=calmLogo();var t=document.querySelector('#open .ss');if(t)t.textContent='同じWiFiの人と、つながろう。'};
 document.querySelector('.logo').onclick=window.opening;
 render();
 window.opening();
