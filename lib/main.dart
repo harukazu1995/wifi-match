@@ -13,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'billing.dart';
 import 'art.dart';
 import 'board.dart';
+import 'contact.dart';
 import 'paywall.dart';
 import 'radar_scope.dart';
 import 'i18n.dart';
@@ -450,6 +451,7 @@ class _IntroScreenState extends State<IntroScreen> {
   static const _pages = [
     ('📡', '同じWiFiの人が見つかる', 'アプリを入れた人どうしが、同じWiFiにいるときだけ、お互いを見つけられます。共通の趣味が多い人から順に表示されます。'),
     ('💞', 'いいねして、マッチ', 'お互いにいいねすると「マッチ」。マッチした人とだけ、1対1でチャットや写真を送り合えます。広場では、みんなと話せます。'),
+    ('💎', 'プレミアムで、もっと広がる', '無料でも、近くの人とのマッチやチャット、全国の掲示板を見ることができます。プレミアムでは、WiFiがなくても近くの人に気づける「レーダー」と、掲示板への投稿・連絡が使えます。月額200円・年額1,680円の予定です（今は無料のベータ版です）。'),
     ('🛡️', '安心して使うために', 'サーバーは使わず、データはあなたのスマホの中だけ。不快な相手は、通報・ブロックできます。18歳以上の方のみご利用いただけます。'),
   ];
 
@@ -2095,6 +2097,15 @@ class MeTab extends StatelessWidget {
       Text(
         '【ご利用ルール】18歳以上の方のみご利用いただけます。わいせつな内容、嫌がらせ、勧誘や詐欺、金銭の要求、18歳未満の方への接触は禁止です。不快な相手は「通報」「ブロック」ができます（広場では相手のメッセージを長押し）。',
         style: TextStyle(fontSize: 12.5, color: Theme.of(context).hintColor),
+      ),
+      const SizedBox(height: 8),
+      Align(
+        alignment: Alignment.centerLeft,
+        child: FilledButton.tonalIcon(
+          onPressed: () => openContact(context),
+          icon: const Icon(Icons.mail_outline),
+          label: const Text('お問い合わせ'),
+        ),
       ),
       const SizedBox(height: 8),
       SelectableText(
