@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -6,9 +5,11 @@ import 'art.dart';
 import 'billing.dart';
 import 'main.dart' show billing, navKey;
 
-const _coral = Color(0xFFFF4D6D);
-const _orange = Color(0xFFFF8A4C);
+const _coral = Color(0xFFBFA77A);
+const _orange = Color(0xFFD8C7A4);
 const _ink = Color(0xFF2B2430);
+const _gradA = Color(0xFF8F7A52);
+const _gradB = Color(0xFF6F5D3E);
 
 /// 有料画面を開く。why を渡すと、上に理由が出る。
 void openPaywall([String? why]) {
@@ -30,8 +31,8 @@ class PremiumPromoCard extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 14),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [_coral, _orange], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                borderRadius: BorderRadius.circular(22),
+                gradient: const LinearGradient(colors: [_gradA, _gradB], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                borderRadius: BorderRadius.circular(16),
               ),
               child: const Row(children: [
                 Icon(Icons.workspace_premium, color: Colors.white),
@@ -47,15 +48,14 @@ class PremiumPromoCard extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 14),
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [_coral, _orange, Color(0xFFFFC46B)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: const [BoxShadow(color: Color(0x52FF4D6D), blurRadius: 26, offset: Offset(0, 10))],
+              gradient: const LinearGradient(colors: [_gradA, _gradB], begin: Alignment.topLeft, end: Alignment.bottomRight),
+              borderRadius: BorderRadius.circular(16),
             ),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(99)),
-                child: const Text('Meetory プレミアム', style: TextStyle(color: _coral, fontSize: 11, fontWeight: FontWeight.w800)),
+                decoration: BoxDecoration(color: _orange, borderRadius: BorderRadius.circular(99)),
+                child: const Text('Meetory プレミアム', style: TextStyle(color: Color(0xFF151515), fontSize: 11, fontWeight: FontWeight.w700)),
               ),
               const SizedBox(height: 8),
               const Text('全国の「行きたい」が、見つかる。',
@@ -70,7 +70,7 @@ class PremiumPromoCard extends StatelessWidget {
               const SizedBox(height: 12),
               FilledButton(
                 onPressed: openPaywall,
-                style: FilledButton.styleFrom(backgroundColor: Colors.white, foregroundColor: _coral),
+                style: FilledButton.styleFrom(backgroundColor: _orange, foregroundColor: Color(0xFF151515)),
                 child: const Text('くわしく見る', style: TextStyle(fontWeight: FontWeight.w800)),
               ),
             ]),
@@ -142,22 +142,21 @@ class PaywallScreen extends StatelessWidget {
                       width: double.infinity,
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(colors: [_coral, _orange]),
+                          color: _coral,
                           borderRadius: BorderRadius.circular(99),
-                          boxShadow: const [BoxShadow(color: Color(0x61FF4D6D), blurRadius: 22, offset: Offset(0, 8))],
                         ),
                         child: FilledButton(
                           onPressed: sel == null || billing.busy ? null : billing.buy,
                           style: FilledButton.styleFrom(
                             backgroundColor: Colors.transparent,
                             shadowColor: Colors.transparent,
-                            disabledBackgroundColor: const Color(0x66FF4D6D),
+                            disabledBackgroundColor: const Color(0x66BFA77A),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
                           child: billing.busy
-                              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF151515)))
                               : Text(sel == null ? 'じゅんび中です' : (yearlySel ? '年額 $ypr で始める' : '月額 $mpr で始める'),
-                                  style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w900, color: Colors.white)),
+                                  style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w700, color: Color(0xFF151515))),
                         ),
                       ),
                     ),
@@ -189,7 +188,8 @@ class _Hero extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        gradient: LinearGradient(colors: [Color(0xFFFF4D6D), Color(0xFFFF7A55), Color(0xFFFFB45E)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+        color: Color(0xFF151515),
+        border: Border(bottom: BorderSide(color: Color(0xFF2A2A2A))),
       ),
       padding: EdgeInsets.fromLTRB(16, MediaQuery.of(context).padding.top + 8, 16, 52),
       child: Column(children: [
@@ -198,7 +198,7 @@ class _Hero extends StatelessWidget {
           child: IconButton(
             onPressed: () => Navigator.of(context).maybePop(),
             icon: const Icon(Icons.close, color: Colors.white),
-            style: IconButton.styleFrom(backgroundColor: const Color(0x38FFFFFF)),
+            style: IconButton.styleFrom(backgroundColor: const Color(0xFF242424)),
           ),
         ),
         SizedBox(width: 280, height: 170, child: CustomPaint(painter: _GemPainter())),
@@ -206,11 +206,11 @@ class _Hero extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
           decoration: BoxDecoration(
-            color: const Color(0x38FFFFFF),
+            color: Colors.transparent,
             borderRadius: BorderRadius.circular(99),
-            border: Border.all(color: const Color(0x8CFFFFFF)),
+            border: Border.all(color: const Color(0xFF5A5242)),
           ),
-          child: const Text('PREMIUM', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 2.2)),
+          child: const Text('PREMIUM', style: TextStyle(color: _orange, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 2.2)),
         ),
         const SizedBox(height: 10),
         const Text('全国の「行きたい」を、\nひとつの場所に。',
@@ -226,92 +226,30 @@ class _Hero extends StatelessWidget {
 class _GemPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final c = Offset(size.width / 2, size.height / 2 + 4);
-    canvas.drawCircle(
-      c,
-      88,
-      Paint()
-        ..shader = const RadialGradient(colors: [Color(0xB3FFFFFF), Color(0x00FFFFFF)]).createShader(Rect.fromCircle(center: c, radius: 88)),
-    );
-    final ring = Paint()
+    // 細い線のダイヤ（静かな見た目）
+    final c = Offset(size.width / 2, size.height / 2);
+    final line = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5
-      ..color = const Color(0x59FFFFFF);
-    canvas.drawCircle(c, 70, ring);
-    canvas.drawCircle(c, 88, ring..color = const Color(0x33FFFFFF));
-
-    canvas.save();
-    canvas.translate(c.dx, c.dy);
-    Path hex(double dy) => Path()
-      ..moveTo(0, -58 + dy)
-      ..lineTo(50, -29 + dy)
-      ..lineTo(50, 29 + dy)
-      ..lineTo(0, 58 + dy)
-      ..lineTo(-50, 29 + dy)
-      ..lineTo(-50, -29 + dy)
-      ..close();
-    canvas.drawPath(hex(6), Paint()..color = const Color(0x1F000000));
-    final body = hex(0);
-    canvas.drawPath(
-      body,
-      Paint()
-        ..shader = const LinearGradient(colors: [Colors.white, Color(0xFFFFE3EA)], begin: Alignment.topLeft, end: Alignment.bottomRight)
-            .createShader(const Rect.fromLTWH(-50, -58, 100, 116)),
-    );
-    canvas.drawPath(
-      Path()
-        ..moveTo(0, -58)
-        ..lineTo(50, -29)
-        ..lineTo(0, 0)
-        ..lineTo(-50, -29)
-        ..close(),
-      Paint()..color = const Color(0xB3FFFFFF),
-    );
-    canvas.drawPath(
-      Path()
-        ..moveTo(-50, -29)
-        ..lineTo(0, 0)
-        ..lineTo(0, 58)
-        ..lineTo(-50, 29)
-        ..close(),
-      Paint()..color = const Color(0x8CFFC2D0),
-    );
-    final grad = const LinearGradient(colors: [Color(0xFFFF8A4C), Color(0xFFFF3D7A)], begin: Alignment.topLeft, end: Alignment.bottomRight)
-        .createShader(const Rect.fromLTWH(-30, -14, 60, 40));
-    final arc = Paint()
-      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.6
+      ..strokeJoin = StrokeJoin.round
       ..strokeCap = StrokeCap.round
-      ..strokeWidth = 7
-      ..shader = grad;
-    canvas.drawArc(Rect.fromCircle(center: const Offset(0, 18.7), radius: 38), -math.pi * 0.75, math.pi / 2, false, arc);
-    canvas.drawArc(Rect.fromCircle(center: const Offset(0, 22.9), radius: 24), -math.pi * 0.75, math.pi / 2, false, arc);
-    canvas.drawCircle(const Offset(0, 21), 6.5, Paint()..shader = grad);
-    canvas.restore();
-
-    void star(Offset p, double s, double a) {
-      final path = Path()
-        ..moveTo(p.dx, p.dy - s)
-        ..quadraticBezierTo(p.dx + s * 0.18, p.dy - s * 0.18, p.dx + s, p.dy)
-        ..quadraticBezierTo(p.dx + s * 0.18, p.dy + s * 0.18, p.dx, p.dy + s)
-        ..quadraticBezierTo(p.dx - s * 0.18, p.dy + s * 0.18, p.dx - s, p.dy)
-        ..quadraticBezierTo(p.dx - s * 0.18, p.dy - s * 0.18, p.dx, p.dy - s)
-        ..close();
-      canvas.drawPath(path, Paint()..color = Color.fromRGBO(255, 255, 255, a));
-    }
-
-    star(const Offset(38, 36), 9, 1);
-    star(const Offset(250, 44), 7, 0.9);
-    star(const Offset(236, 140), 6, 0.8);
-    for (final side in [-1.0, 1.0]) {
-      final r = RRect.fromRectAndRadius(Rect.fromCenter(center: Offset(c.dx + side * 112, c.dy + 12), width: 46, height: 46), const Radius.circular(14));
-      canvas.drawRRect(r, Paint()..color = const Color(0xF2FFFFFF));
-      final icon = side < 0 ? Icons.directions_walk : Icons.campaign;
-      final tp = TextPainter(
-        text: TextSpan(text: String.fromCharCode(icon.codePoint), style: TextStyle(fontFamily: icon.fontFamily, package: icon.fontPackage, fontSize: 26, color: _coral)),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      tp.paint(canvas, Offset(r.center.dx - tp.width / 2, r.center.dy - tp.height / 2));
-    }
+      ..color = _coral;
+    final fine = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2
+      ..strokeJoin = StrokeJoin.round
+      ..color = _coral.withValues(alpha: 0.7);
+    final l = c + const Offset(-44, -14), r = c + const Offset(44, -14);
+    final tl = c + const Offset(-24, -34), tr = c + const Offset(24, -34);
+    final bottom = c + const Offset(0, 40);
+    canvas.drawPath(Path()..moveTo(tl.dx, tl.dy)..lineTo(tr.dx, tr.dy)..lineTo(r.dx, r.dy)..lineTo(bottom.dx, bottom.dy)..lineTo(l.dx, l.dy)..close(), line);
+    canvas.drawLine(l, r, fine);
+    canvas.drawLine(tl, c + const Offset(-14, -14), fine);
+    canvas.drawLine(c + const Offset(-14, -14), bottom, fine);
+    canvas.drawLine(tr, c + const Offset(14, -14), fine);
+    canvas.drawLine(c + const Offset(14, -14), bottom, fine);
+    canvas.drawLine(c + const Offset(0, -34), c + const Offset(-14, -14), fine);
+    canvas.drawLine(c + const Offset(0, -34), c + const Offset(14, -14), fine);
   }
 
   @override
@@ -334,19 +272,18 @@ class _Feature extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: cs.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [BoxShadow(color: Color(0x12280A1E), blurRadius: 14, offset: Offset(0, 4))],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF2A2A2A)),
       ),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Container(
           width: 46,
           height: 46,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15),
-            gradient: LinearGradient(colors: [c1, c2], begin: Alignment.topLeft, end: Alignment.bottomRight),
-            boxShadow: const [BoxShadow(color: Color(0x33280A1E), blurRadius: 12, offset: Offset(0, 5))],
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFF3A362C)),
           ),
-          child: Icon(icon, color: Colors.white, size: 25),
+          child: Icon(icon, color: _orange, size: 24),
         ),
         const SizedBox(width: 14),
         Expanded(
@@ -378,21 +315,21 @@ class _Compare extends StatelessWidget {
           width: 76,
           alignment: Alignment.center,
           padding: const EdgeInsets.symmetric(vertical: 11),
-          color: pro ? const Color(0x17FF4D6D) : null,
+          color: pro ? const Color(0x17BFA77A) : null,
           child: Icon(ok ? Icons.check : Icons.remove, size: 19, color: ok ? _coral : cs.onSurface.withValues(alpha: 0.35)),
         );
     return Container(
       decoration: BoxDecoration(
         color: cs.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [BoxShadow(color: Color(0x12280A1E), blurRadius: 14, offset: Offset(0, 4))],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF2A2A2A)),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(children: [
         Row(children: [
           const Expanded(child: SizedBox()),
           Container(width: 76, alignment: Alignment.center, padding: const EdgeInsets.symmetric(vertical: 10), child: Text('無料', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: cs.onSurface.withValues(alpha: 0.55)))),
-          Container(width: 76, alignment: Alignment.center, padding: const EdgeInsets.symmetric(vertical: 10), color: const Color(0x17FF4D6D), child: const Text('プレミアム', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: _coral))),
+          Container(width: 76, alignment: Alignment.center, padding: const EdgeInsets.symmetric(vertical: 10), color: const Color(0x17BFA77A), child: const Text('プレミアム', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: _coral))),
         ]),
         for (final r in rows)
           Container(
@@ -428,13 +365,12 @@ class _Plan extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(8, 22, 8, 14),
           decoration: BoxDecoration(
             color: cs.surface,
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: selected ? _coral : cs.onSurface.withValues(alpha: 0.12), width: 2),
-            boxShadow: selected ? const [BoxShadow(color: Color(0x40FF4D6D), blurRadius: 20, offset: Offset(0, 8))] : null,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: selected ? _coral : const Color(0xFF333333), width: selected ? 1.5 : 1),
           ),
           child: Column(children: [
             Text(title, style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.6))),
-            Text(price, style: TextStyle(fontSize: 30, fontWeight: FontWeight.w900, color: selected ? _coral : _inkOf(cs), height: 1.2)),
+            Text(price, style: TextStyle(fontSize: 28, fontWeight: FontWeight.w500, color: selected ? _orange : _inkOf(cs), height: 1.2)),
             Text(sub, textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.6))),
           ]),
         ),
@@ -443,8 +379,8 @@ class _Plan extends StatelessWidget {
             top: -11,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-              decoration: BoxDecoration(gradient: const LinearGradient(colors: [_coral, _orange]), borderRadius: BorderRadius.circular(99)),
-              child: Text(badge!, style: const TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w800)),
+              decoration: BoxDecoration(color: _coral, borderRadius: BorderRadius.circular(99)),
+              child: Text(badge!, style: const TextStyle(color: Color(0xFF151515), fontSize: 11.5, fontWeight: FontWeight.w800)),
             ),
           ),
       ]),
