@@ -7,8 +7,9 @@ import 'paywall.dart';
 
 /// 全国掲示板。見るのは無料。投稿と連絡は、プレミアム（ベータ期間中は、無料）。
 /// いまは「見た目の確認用」で、サンプルの投稿を表示します。サーバーにつなぐのはこの後です。
-const _coral = Color(0xFFFF4D6D);
-const _orange = Color(0xFFFF8A4C);
+const _coral = Color(0xFFBFA77A);
+const _gradA = Color(0xFF8F7A52);
+const _gradB = Color(0xFF6F5D3E);
 
 const List<String> _areas = ['全国', '北海道・東北', '関東', '中部', '近畿', '中国・四国', '九州・沖縄'];
 const List<String> _cats = ['テーマパーク', 'ライブ・フェス', '旅行', 'グルメ', 'スポーツ', '趣味・その他'];
@@ -105,7 +106,7 @@ class _BoardTabState extends State<BoardTab> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _compose,
         backgroundColor: _coral,
-        foregroundColor: Colors.white,
+        foregroundColor: const Color(0xFF151515),
         icon: const Icon(Icons.edit),
         label: Text(_event ? 'イベントを載せる' : '仲間を募集する'),
       ),
@@ -115,8 +116,8 @@ class _BoardTabState extends State<BoardTab> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [_coral, _orange], begin: Alignment.topLeft, end: Alignment.bottomRight),
-              borderRadius: BorderRadius.circular(22),
+              gradient: const LinearGradient(colors: [_gradA, _gradB], begin: Alignment.topLeft, end: Alignment.bottomRight),
+              borderRadius: BorderRadius.circular(16),
             ),
             child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('全国掲示板', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900)),
@@ -129,8 +130,8 @@ class _BoardTabState extends State<BoardTab> {
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(color: const Color(0xFFFFF1C9), borderRadius: BorderRadius.circular(12)),
-            child: const Text('いまは見た目の確認用です。表示は、すべてサンプルです。', style: TextStyle(fontSize: 12.5, color: Color(0xFF2B2430))),
+            decoration: BoxDecoration(color: const Color(0xFF1A1A1A), border: Border.all(color: const Color(0xFF2A2A2A)), borderRadius: BorderRadius.circular(12)),
+            child: const Text('いまは見た目の確認用です。表示は、すべてサンプルです。', style: TextStyle(fontSize: 12.5, color: Color(0xFFBDB8AE))),
           ),
           const SizedBox(height: 12),
           SegmentedButton<bool>(
@@ -197,7 +198,7 @@ class _PostCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: cs.surface,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 12, offset: Offset(0, 4))],
+        border: Border.all(color: const Color(0xFF2A2A2A)),
       ),
       child: p.event ? _event(context, sub) : _recruit(context, sub),
     );
@@ -244,9 +245,9 @@ class _PostCard extends StatelessWidget {
           width: 58,
           padding: const EdgeInsets.fromLTRB(4, 8, 4, 7),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(colors: [_coral, _orange], begin: Alignment.topLeft, end: Alignment.bottomRight),
+            gradient: const LinearGradient(colors: [_gradA, _gradB], begin: Alignment.topLeft, end: Alignment.bottomRight),
             borderRadius: BorderRadius.circular(16),
-            boxShadow: const [BoxShadow(color: Color(0x4DFF4D6D), blurRadius: 10, offset: Offset(0, 4))],
+            
           ),
           child: Column(children: [
             Text(p.month, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: numeric ? 26 : 16, height: 1.1)),
@@ -378,9 +379,9 @@ class _ComposeSheetState extends State<_ComposeSheet> {
           TextField(controller: _body, maxLines: 3, maxLength: 200, decoration: const InputDecoration(labelText: 'ひとこと', border: OutlineInputBorder())),
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: const Color(0xFFFFF1C9), borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(color: const Color(0xFF1A1A1A), border: Border.all(color: const Color(0xFF2A2A2A)), borderRadius: BorderRadius.circular(12)),
             child: const Text('電話番号・LINE・住所などは書かないでください。会うときは、昼間の人が多い場所で。18歳以上の方のみ。',
-                style: TextStyle(fontSize: 12.5, height: 1.4, color: Color(0xFF2B2430))),
+                style: TextStyle(fontSize: 12.5, height: 1.4, color: Color(0xFFBDB8AE))),
           ),
           const SizedBox(height: 12),
           SizedBox(width: double.infinity, child: FilledButton(onPressed: _submit, child: const Text('投稿する'))),
