@@ -62,7 +62,7 @@ if "com.google.android.gms.ads.APPLICATION_ID" not in s:
     )
     s = s.replace("</application>", meta, 1)
 
-s = re.sub(r'android:label="[^"]*"', 'android:label="WiFi Match"', s, count=1)
+s = re.sub(r'android:label="[^"]*"', 'android:label="Nearly"', s, count=1)
 manifest.write_text(s, encoding="utf-8")
 
 # MainActivity を MulticastLock 対応版に差し替え
