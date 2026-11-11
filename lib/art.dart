@@ -333,10 +333,10 @@ class CategoryIcon extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(size * 0.32),
-        gradient: LinearGradient(colors: [d[0] as Color, d[1] as Color], begin: Alignment.topLeft, end: Alignment.bottomRight),
-        boxShadow: const [BoxShadow(color: Color(0x2E280A1E), blurRadius: 8, offset: Offset(0, 3))],
+        color: const Color(0xFF1A1A1A),
+        border: Border.all(color: const Color(0xFF3A362C)),
       ),
-      child: Icon(d[2] as IconData, color: Colors.white, size: size * 0.58),
+      child: Icon(d[2] as IconData, color: const Color(0xFFD8C7A4), size: size * 0.55),
     );
   }
 }
