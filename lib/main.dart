@@ -11,6 +11,7 @@ import 'package:in_app_purchase/in_app_purchase.dart' show ProductDetails;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'billing.dart';
+import 'board.dart';
 import 'i18n.dart';
 import 'mesh.dart';
 import 'proximity.dart';
@@ -310,8 +311,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                   child: Transform.translate(
                     offset: Offset(0, 14 * (1 - text)),
                     child: const Text.rich(TextSpan(children: [
-                      TextSpan(text: 'WiFi', style: TextStyle(color: _ink)),
-                      TextSpan(text: 'Match', style: TextStyle(color: _coral)),
+                      TextSpan(text: 'Near', style: TextStyle(color: _ink)),
+                      TextSpan(text: 'ly', style: TextStyle(color: _coral)),
                     ]), style: TextStyle(fontSize: 34, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
                   ),
                 ),
@@ -1040,8 +1041,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               WifiLogo(size: 34),
               SizedBox(width: 8),
               Text.rich(TextSpan(children: [
-                TextSpan(text: 'WiFi', style: TextStyle(fontWeight: FontWeight.w900, color: _ink)),
-                TextSpan(text: 'Match', style: TextStyle(fontWeight: FontWeight.w900, color: _coral)),
+                TextSpan(text: 'Near', style: TextStyle(fontWeight: FontWeight.w900, color: _ink)),
+                TextSpan(text: 'ly', style: TextStyle(fontWeight: FontWeight.w900, color: _coral)),
               ])),
             ]),
             actions: [
@@ -1064,7 +1065,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ],
           ),
           // const にしないことで、通信状態が変わるたびに各タブを描き直す
-          body: IndexedStack(index: _tab, children: [PeopleTab(), MatchesTab(), PlazaTab(), ProximityTab(), MeTab()]),
+          body: IndexedStack(index: _tab, children: [PeopleTab(), MatchesTab(), PlazaTab(), ProximityTab(), MeTab(), BoardTab()]),
           bottomNavigationBar: Column(mainAxisSize: MainAxisSize.min, children: [
             const AdBanner(),
             NavigationBar(
@@ -1102,6 +1103,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 label: tr('レーダー'),
               ),
               NavigationDestination(icon: const Icon(Icons.person_outline), selectedIcon: const Icon(Icons.person), label: tr('自分')),
+              NavigationDestination(icon: const Icon(Icons.campaign_outlined), selectedIcon: const Icon(Icons.campaign), label: tr('掲示板')),
             ],
           ),
           ]),
