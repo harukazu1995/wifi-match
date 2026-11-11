@@ -11,7 +11,10 @@ import 'package:in_app_purchase/in_app_purchase.dart' show ProductDetails;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'billing.dart';
+import 'art.dart';
 import 'board.dart';
+import 'paywall.dart';
+import 'radar_scope.dart';
 import 'i18n.dart';
 import 'mesh.dart';
 import 'proximity.dart';
@@ -716,8 +719,7 @@ class Avatar extends StatelessWidget {
           width: size,
           height: size,
           alignment: Alignment.center,
-          decoration: BoxDecoration(color: cs.surfaceContainerHighest, shape: BoxShape.circle),
-          child: Text(emoji, style: TextStyle(fontSize: size * 0.52)),
+          child: FaceAvatar(emoji, size: size),
         ),
         if (online)
           Positioned(
@@ -853,7 +855,7 @@ class _ProfileFormState extends State<ProfileForm> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: e == _emoji ? cs.primary : Colors.transparent, width: 2),
                 ),
-                child: Text(e, style: const TextStyle(fontSize: 22)),
+                child: FaceAvatar(e, size: 34),
               ),
             ),
         ],
@@ -1966,27 +1968,25 @@ class ProximityTab extends StatelessWidget {
         return RefreshIndicator(
           onRefresh: prox.refresh,
           child: ListView(padding: const EdgeInsets.all(16), children: [
-            Container(
-              margin: const EdgeInsets.only(bottom: 14),
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                gradient: _brandGradient,
-                borderRadius: BorderRadius.circular(28),
-                boxShadow: const [BoxShadow(color: Color(0x40FF4D6D), blurRadius: 24, offset: Offset(0, 10))],
+            const _Header('ふれあいレーダー', 'Bluetoothで、WiFiがなくても、近くの人に気づける'),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
+              child: RadarScope(
+                active: prox.enabled,
+                me: mesh.me?.emoji ?? 'あなた',
+                others: [for (final e in shown.take(5)) (seed: e.emoji, label: hhmm(e.at))],
               ),
-              child: Row(children: [
-                RadarView(active: prox.enabled, size: 110),
-                const SizedBox(width: 16),
-                const Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('ふれあいレーダー', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900)),
-                    SizedBox(height: 6),
-                    Text('Bluetoothで、WiFiがなくても、近くの人に気づける',
-                        style: TextStyle(color: Colors.white, fontSize: 14, height: 1.35)),
-                  ]),
-                ),
+            ),
+            const SizedBox(height: 8),
+            Center(
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(Icons.circle, size: 10, color: prox.enabled ? const Color(0xFF1FB57A) : Colors.grey),
+                const SizedBox(width: 8),
+                Text(prox.enabled ? '探索中 ・ 近くに${shown.length}人' : 'オフ ・ 探していません', style: const TextStyle(fontWeight: FontWeight.w800)),
               ]),
             ),
+            const SizedBox(height: 14),
+
             if (!prox.supported) const _Notice('この端末は、Bluetooth LE に対応していません'),
             Card(
               child: SwitchListTile(
@@ -1997,7 +1997,7 @@ class ProximityTab extends StatelessWidget {
                 subtitle: const Text('オンにすると、アプリを閉じていても、近くの人を探します（電池を使います）'),
               ),
             ),
-            const PaywallCard(),
+            const PremiumPromoCard(),
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -2047,6 +2047,7 @@ class MeTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(padding: const EdgeInsets.all(16), children: [
+      const PremiumPromoCard(),
       const _Header('プロフィール', '保存すると数秒で近くの人の画面に反映されます'),
       Card(
         color: Theme.of(context).colorScheme.surface,
