@@ -1,12 +1,12 @@
-# WiFi Match プライバシーポリシー
+# Nearly プライバシーポリシー
 
 制定日：2026年11月7日
 
-WiFi Match（以下「本アプリ」）は、同じWiFiにいる本アプリの利用者どうしが、サーバーを使わずに直接つながるアプリです。本アプリでの情報の扱いを説明します。
+Nearly（以下「本アプリ」）は、同じWiFiにいる本アプリの利用者どうしが、サーバーを使わずに直接つながるアプリです。本アプリでの情報の扱いを説明します。
 
 ## 1. 運営者とお問い合わせ
 
-- 運営者：WiFi Match 開発者（GitHub：harukazu1995）
+- 運営者：Nearly 開発者（GitHub：harukazu1995）
 - お問い合わせ・通報：https://github.com/harukazu1995/wifi-match/issues
 
 ## 2. 本アプリが扱う情報
@@ -63,6 +63,6 @@ WiFi Match（以下「本アプリ」）は、同じWiFiにいる本アプリの
 
 ---
 
-# WiFi Match Privacy Policy (summary)
+# Nearly Privacy Policy (summary)
 
-WiFi Match has no server. Your profile (nickname, emoji, short bio, interests), messages and photos you choose to send in one-to-one chats are stored on your device and are sent directly to other WiFi Match users on the same Wi-Fi network. The developer does not receive or store them. The app does not collect your name, email, phone number, or GPS location. Nearby Radar (Bluetooth) is off by default; when on, your nickname, icon and a daily-changing ID are broadcast to nearby devices, and the list of people you passed is stored only on your device. Subscriptions are handled by Google Play. Ads are served by Google AdMob, which may collect advertising ID, IP address and device information under Google's policies (https://policies.google.com/technologies/partner-sites); a consent form is shown where required. You can delete all local data in the app ("退出してデータを削除") or by uninstalling. The app is for users aged 18 and over. Contact: https://github.com/harukazu1995/wifi-match/issues
+Nearly has no server. Your profile (nickname, emoji, short bio, interests), messages and photos you choose to send in one-to-one chats are stored on your device and are sent directly to other Nearly users on the same Wi-Fi network. The developer does not receive or store them. The app does not collect your name, email, phone number, or GPS location. Nearby Radar (Bluetooth) is off by default; when on, your nickname, icon and a daily-changing ID are broadcast to nearby devices, and the list of people you passed is stored only on your device. Subscriptions are handled by Google Play. Ads are served by Google AdMob, which may collect advertising ID, IP address and device information under Google's policies (https://policies.google.com/technologies/partner-sites); a consent form is shown where required. You can delete all local data in the app ("退出してデータを削除") or by uninstalling. The app is for users aged 18 and over. Contact: https://github.com/harukazu1995/wifi-match/issues
