@@ -47,9 +47,9 @@ class _RadarScopeState extends State<RadarScope> with SingleTickerProviderStateM
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: (widget.active ? const Color(0x55FF4D6D) : const Color(0x33281446)),
-                  blurRadius: 40,
-                  offset: const Offset(0, 14),
+                  color: const Color(0x00000000),
+                  blurRadius: 0,
+                  offset: Offset.zero,
                 ),
               ],
             ),
@@ -76,8 +76,7 @@ class _RadarScopeState extends State<RadarScope> with SingleTickerProviderStateM
                                 Container(
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    border: Border.all(color: Colors.white, width: 2),
-                                    boxShadow: const [BoxShadow(color: Color(0x99FF7896), blurRadius: 16)],
+                                    border: Border.all(color: const Color(0xFF6A604A), width: 1),
                                   ),
                                   child: FaceAvatar(shown[i].seed, size: 34),
                                 ),
@@ -96,10 +95,7 @@ class _RadarScopeState extends State<RadarScope> with SingleTickerProviderStateM
                       height: 52,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 3),
-                        boxShadow: [
-                          BoxShadow(color: widget.active ? const Color(0xCCFF4D6D) : const Color(0x55FFFFFF), blurRadius: 24, spreadRadius: 4),
-                        ],
+                        border: Border.all(color: const Color(0xFFD8C7A4), width: 1.5),
                       ),
                       child: FaceAvatar(widget.me, size: 46),
                     ),
@@ -130,25 +126,25 @@ class _ScopePainter extends CustomPainter {
       Paint()
         ..shader = const RadialGradient(
           center: Alignment(0, -0.1),
-          colors: [Color(0xFF4B2A78), Color(0xFF2A1650), Color(0xFF1B0F38)],
+          colors: [Color(0xFF1C1C1C), Color(0xFF181818), Color(0xFF141414)],
           stops: [0, 0.55, 1],
         ).createShader(rect),
     );
     final line = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.4
-      ..color = const Color(0x33FFFFFF);
+      ..color = const Color(0x38BFA77A);
     for (final f in [0.98, 0.64, 0.30]) {
       canvas.drawCircle(c, r * f, line);
     }
     final thin = Paint()
       ..strokeWidth = 1
-      ..color = const Color(0x1AFFFFFF);
+      ..color = const Color(0x1ABFA77A);
     canvas.drawLine(Offset(c.dx - r * 0.97, c.dy), Offset(c.dx + r * 0.97, c.dy), thin);
     canvas.drawLine(Offset(c.dx, c.dy - r * 0.97), Offset(c.dx, c.dy + r * 0.97), thin);
     void label(String s, double f) {
       final tp = TextPainter(
-        text: TextSpan(text: s, style: const TextStyle(color: Color(0x8CFFFFFF), fontSize: 9.5)),
+        text: TextSpan(text: s, style: const TextStyle(color: Color(0x8CD8C7A4), fontSize: 9.5)),
         textDirection: TextDirection.ltr,
       )..layout();
       tp.paint(canvas, Offset(c.dx + 4, c.dy - r * f + 2));
@@ -167,7 +163,7 @@ class _ScopePainter extends CustomPainter {
         r,
         Paint()
           ..shader = const SweepGradient(
-            colors: [Color(0x00FF4D6D), Color(0x00FF4D6D), Color(0x80FF6E8C), Color(0xE6FFC8D2)],
+            colors: [Color(0x00BFA77A), Color(0x00BFA77A), Color(0x29BFA77A), Color(0xB3D8C7A4)],
             stops: [0, 0.69, 0.995, 1],
           ).createShader(Rect.fromCircle(center: Offset.zero, radius: r)),
       );
@@ -180,7 +176,7 @@ class _ScopePainter extends CustomPainter {
           Paint()
             ..style = PaintingStyle.stroke
             ..strokeWidth = 2
-            ..color = Color.fromRGBO(255, 140, 170, (1 - p) * 0.8),
+            ..color = Color.fromRGBO(216, 199, 164, (1 - p) * 0.45),
         );
       }
     }
@@ -190,7 +186,7 @@ class _ScopePainter extends CustomPainter {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2
-        ..color = const Color(0x24FFFFFF),
+        ..color = const Color(0x40BFA77A),
     );
   }
 
