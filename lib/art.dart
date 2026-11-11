@@ -19,7 +19,9 @@ int _hash(String s) {
   for (final u in s.codeUnits) {
     h = (h * 31 + u) & 0xFFFFFFFF;
   }
-  return h;
+  h = ((h ^ (h >> 16)) * 0x45d9f3b) & 0xFFFFFFFF;
+  h = ((h ^ (h >> 16)) * 0x45d9f3b) & 0xFFFFFFFF;
+  return (h ^ (h >> 16)) & 0xFFFFFFFF;
 }
 
 const _bgs = [
